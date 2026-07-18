@@ -3,10 +3,14 @@ import { NextResponse } from "next/server";
 
 import { isClerkEnabled } from "@/lib/env";
 
-const isProtectedRoute = createRouteMatcher(["/dashboard(.*)"]);
+const isProtectedRoute = createRouteMatcher(["/dashboard(.*)", "/api/(.*)"]);
+
+// The emergency card is intentionally shareable and must stay reachable without
+// a session, so it is excluded from the API auth requirement.
+const isPublicApiRoute = createRouteMatcher(["/api/emergency(.*)"]);
 
 const withClerk = clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req)) {
+  if (isProtectedRoute(req) && !isPublicApiRoute(req)) {
     await auth.protect();
   }
 });

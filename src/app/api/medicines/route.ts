@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server";
 
 import { addItem, queryByMember } from "@/lib/api-crud";
+import { parseJsonBody, withErrorHandling } from "@/lib/http";
 import { db, uid } from "@/lib/store";
 import type { Medicine } from "@/lib/types";
 
-export async function GET(req: Request) {
+export const GET = withErrorHandling(async (req: Request) => {
   return NextResponse.json(queryByMember(db().medicines, req));
-}
+});
 
-export async function POST(req: Request) {
-  const body = (await req.json()) as Partial<Medicine>;
+export const POST = withErrorHandling(async (req: Request) => {
+  const body = await parseJsonBody<Partial<Medicine>>(req);
   const medicine: Medicine = {
     id: uid("med"),
     memberId: body.memberId ?? "",
@@ -27,4 +28,4 @@ export async function POST(req: Request) {
     action: "Medicine added",
     target: medicine.name,
   });
-}
+});

@@ -128,8 +128,10 @@ export function MemberFormDialog({
         reset();
       }
       onOpenChange?.(false);
-    } catch {
-      toast.error("Something went wrong");
+    } catch (err) {
+      toast.error(isEdit ? "Couldn't update member" : "Couldn't add member", {
+        description: err instanceof Error ? err.message : "Please try again.",
+      });
     }
   };
 

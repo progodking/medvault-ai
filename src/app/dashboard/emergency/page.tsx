@@ -42,14 +42,22 @@ export default function EmergencyPage() {
           url: shareUrl,
         });
         return;
-      } catch {
-        /* cancelled */
+      } catch (err) {
+        // The user dismissing the share sheet is not an error — stop here.
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        // Any other failure falls back to copying the link below.
       }
     }
-    await navigator.clipboard.writeText(shareUrl);
-    toast.success("Secure link copied", {
-      description: "Single-use link expires in 24 hours.",
-    });
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Secure link copied", {
+        description: "Single-use link expires in 24 hours.",
+      });
+    } catch {
+      toast.error("Couldn't share the link", {
+        description: "Copy it manually from your browser's address bar.",
+      });
+    }
   };
 
   return (

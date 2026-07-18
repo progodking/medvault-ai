@@ -2,6 +2,7 @@
 
 import { Search, Sparkles, X } from "lucide-react";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { RecordTimeline } from "@/components/dashboard/record-timeline";
 import { PageHeader } from "@/components/shared/page-header";
@@ -63,6 +64,10 @@ export default function TimelinePage() {
       );
       setAiResults(res.results);
       setInterpreted(res.interpreted);
+    } catch (err) {
+      toast.error("Search failed", {
+        description: err instanceof Error ? err.message : "Please try again.",
+      });
     } finally {
       setSearching(false);
     }

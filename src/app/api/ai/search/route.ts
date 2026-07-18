@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { parseJsonBody, withErrorHandling } from "@/lib/http";
 import { db } from "@/lib/store";
 import type { MedicalRecord, RecordCategory } from "@/lib/types";
 import { RECORD_CATEGORIES } from "@/lib/constants";
@@ -15,11 +16,11 @@ const SCAN_KEYWORDS: Record<string, string[]> = {
  * hospital, keyword) locally so it works without any external AI service.
  * Examples: "Show all diabetes reports", "Show reports from 2024", "Show MRI".
  */
-export async function POST(req: Request) {
-  const { query, memberId } = (await req.json()) as {
+export const POST = withErrorHandling(async (req: Request) => {
+  const { query, memberId } = await parseJsonBody<{
     query?: string;
     memberId?: string;
-  };
+  }>(req);
   if (!query)
     return NextResponse.json({ error: "Query required" }, { status: 400 });
 
@@ -89,4 +90,4 @@ export async function POST(req: Request) {
       ? `Showing records matching ${filters.join(" · ")}`
       : "Showing all matching records",
   });
-}
+});

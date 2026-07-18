@@ -80,6 +80,13 @@ export function MemberCard({ member }: { member: FamilyMember }) {
                       onClick={() =>
                         del.mutate(member.id, {
                           onSuccess: () => toast.success(`${member.name} deleted`),
+                          onError: (err) =>
+                            toast.error("Couldn't delete member", {
+                              description:
+                                err instanceof Error
+                                  ? err.message
+                                  : "Please try again.",
+                            }),
                         })
                       }
                     >

@@ -1,18 +1,19 @@
 import { NextResponse } from "next/server";
 
 import { addItem, queryByMember } from "@/lib/api-crud";
+import { parseJsonBody, withErrorHandling } from "@/lib/http";
 import { db, uid } from "@/lib/store";
 import type { MedicalRecord } from "@/lib/types";
 
-export async function GET(req: Request) {
+export const GET = withErrorHandling(async (req: Request) => {
   const records = queryByMember(db().records, req, (a, b) =>
     b.date.localeCompare(a.date),
   );
   return NextResponse.json(records);
-}
+});
 
-export async function POST(req: Request) {
-  const body = (await req.json()) as Partial<MedicalRecord>;
+export const POST = withErrorHandling(async (req: Request) => {
+  const body = await parseJsonBody<Partial<MedicalRecord>>(req);
   const record: MedicalRecord = {
     id: uid("r"),
     memberId: body.memberId ?? "",
@@ -33,4 +34,4 @@ export async function POST(req: Request) {
     action: "Report uploaded",
     target: record.title,
   });
-}
+});

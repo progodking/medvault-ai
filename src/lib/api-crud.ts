@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { parseJsonBody } from "@/lib/http";
 import { logAudit } from "@/lib/store";
 
 /**
@@ -52,7 +53,7 @@ export async function updateItem<T extends Identifiable>(
 ): Promise<NextResponse> {
   const item = collection.find((entry) => entry.id === id);
   if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  const body = (await req.json()) as Partial<T>;
+  const body = await parseJsonBody<Partial<T>>(req);
   Object.assign(item, body, { id });
   onUpdated?.(item);
   return NextResponse.json(item);

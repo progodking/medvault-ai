@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 
 import { AI_DISCLAIMER } from "@/lib/constants";
 import { generateWithGemini } from "@/lib/gemini";
+import { parseJsonBody, withErrorHandling } from "@/lib/http";
 
-export async function POST(req: Request) {
-  const { text, title } = (await req.json()) as {
+export const POST = withErrorHandling(async (req: Request) => {
+  const { text, title } = await parseJsonBody<{
     text?: string;
     title?: string;
-  };
+  }>(req);
   if (!text)
     return NextResponse.json({ error: "Text required" }, { status: 400 });
 
@@ -27,4 +28,4 @@ Report content:\n${text}`;
     disclaimer: AI_DISCLAIMER,
     source: ai ? "gemini" : "demo",
   });
-}
+});

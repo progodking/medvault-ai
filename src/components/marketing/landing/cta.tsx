@@ -17,7 +17,7 @@ export function Cta() {
               </h2>
               <p className="mx-auto mt-4 max-w-xl text-white/90">
                 Join thousands of families who never lose a medical report again.
-                Start free — no credit card required.
+                Completely free — no credit card, no premium tiers.
               </p>
               <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
                 <Button
@@ -29,7 +29,7 @@ export function Cta() {
                   size="lg"
                   variant="outline"
                   className="h-12 border-white/40 bg-white/10 px-6 text-base text-white hover:bg-white/20"
-                  render={<Link href="/pricing">View pricing</Link>}
+                  render={<Link href="/features">Explore features</Link>}
                 />
               </div>
             </div>

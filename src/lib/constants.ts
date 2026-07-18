@@ -38,7 +38,6 @@ export const DASHBOARD_NAV: NavItem[] = [
 
 export const MARKETING_NAV = [
   { title: "Features", href: "/features" },
-  { title: "Pricing", href: "/pricing" },
   { title: "About", href: "/about" },
   { title: "Contact", href: "/contact" },
 ] as const;

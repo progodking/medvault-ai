@@ -24,8 +24,8 @@ const faqs = [
     a: "Absolutely. Create a profile for each member — children, parents, grandparents — each with their own timeline, medicines, reminders and emergency card.",
   },
   {
-    q: "Is there a free plan?",
-    a: "Yes. The Free plan covers essentials for a small family. Premium unlocks unlimited members, more storage, advanced AI and priority support.",
+    q: "How much does MedVault AI cost?",
+    a: "It's completely free. Every feature — unlimited family members, OCR uploads, AI explanations, reminders and emergency cards — is included at no cost, with no premium tiers or credit card required.",
   },
   {
     q: "Can I export or download my data?",

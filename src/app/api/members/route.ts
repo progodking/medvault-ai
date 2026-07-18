@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { db, logAudit, uid } from "@/lib/store";
+import { addItem } from "@/lib/api-crud";
+import { db, uid } from "@/lib/store";
 import type { FamilyMember } from "@/lib/types";
 
 export async function GET() {
@@ -25,7 +26,8 @@ export async function POST(req: Request) {
     weightKg: body.weightKg,
     createdAt: new Date().toISOString(),
   };
-  db().members.push(member);
-  logAudit("Member added", member.name);
-  return NextResponse.json(member, { status: 201 });
+  return addItem(db().members, member, {
+    action: "Member added",
+    target: member.name,
+  });
 }

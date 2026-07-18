@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 
-import { db, logAudit, uid } from "@/lib/store";
+import { addItem, queryByMember } from "@/lib/api-crud";
+import { db, uid } from "@/lib/store";
 import type { MedicalRecord } from "@/lib/types";
 
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const memberId = searchParams.get("memberId");
-  let records = db().records;
-  if (memberId) records = records.filter((r) => r.memberId === memberId);
-  records = [...records].sort((a, b) => b.date.localeCompare(a.date));
+  const records = queryByMember(db().records, req, (a, b) =>
+    b.date.localeCompare(a.date),
+  );
   return NextResponse.json(records);
 }
 
@@ -30,7 +29,8 @@ export async function POST(req: Request) {
     tags: body.tags ?? [],
     createdAt: new Date().toISOString(),
   };
-  db().records.push(record);
-  logAudit("Report uploaded", record.title);
-  return NextResponse.json(record, { status: 201 });
+  return addItem(db().records, record, {
+    action: "Report uploaded",
+    target: record.title,
+  });
 }

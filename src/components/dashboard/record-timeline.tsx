@@ -1,8 +1,9 @@
 "use client";
 
-import { Building2, Stethoscope, Trash2 } from "lucide-react";
+import { Building2, Sparkles, Stethoscope, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { ReportSummaryDialog } from "@/components/dashboard/report-summary-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -56,19 +57,33 @@ export function RecordTimeline({
                     {showMember && memberName ? ` · ${memberName(r.memberId)}` : ""}
                   </p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  className="opacity-0 transition-opacity group-hover:opacity-100"
-                  aria-label="Delete record"
-                  onClick={() =>
-                    del.mutate(r.id, {
-                      onSuccess: () => toast.success("Record deleted"),
-                    })
-                  }
-                >
-                  <Trash2 className="size-4 text-destructive" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  <ReportSummaryDialog
+                    record={r}
+                    trigger={
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5 text-primary"
+                      >
+                        <Sparkles className="size-3.5" /> Summarise
+                      </Button>
+                    }
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="opacity-0 transition-opacity group-hover:opacity-100"
+                    aria-label="Delete record"
+                    onClick={() =>
+                      del.mutate(r.id, {
+                        onSuccess: () => toast.success("Record deleted"),
+                      })
+                    }
+                  >
+                    <Trash2 className="size-4 text-destructive" />
+                  </Button>
+                </div>
               </div>
 
               {(r.doctorName || r.hospital) && (

@@ -13,6 +13,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { StatCard } from "@/components/dashboard/stat-card";
+import { HealthInsights } from "@/components/dashboard/health-insights";
 import { HealthSummaryChart } from "@/components/dashboard/health-summary-chart";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -20,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useMedicines } from "@/hooks/use-medicines";
 import { useMembers } from "@/hooks/use-members";
 import { useRecords } from "@/hooks/use-records";
 import { useReminders } from "@/hooks/use-reminders";
@@ -32,6 +34,7 @@ export default function DashboardPage() {
   const { data: stats, isLoading: statsLoading } = useStats();
   const { data: members } = useMembers();
   const { data: records } = useRecords();
+  const { data: medicines } = useMedicines();
   const { data: reminders } = useReminders();
   const [now] = useState(() => Date.now());
 
@@ -80,6 +83,14 @@ export default function DashboardPage() {
           </>
         )}
       </div>
+
+      {/* AI health insights */}
+      <HealthInsights
+        members={members ?? []}
+        records={records ?? []}
+        medicines={medicines ?? []}
+        reminders={reminders ?? []}
+      />
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Health summary chart */}

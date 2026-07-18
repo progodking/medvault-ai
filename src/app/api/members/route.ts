@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
 
+import { parseJsonBody, withErrorHandling } from "@/lib/http";
 import { db, logAudit, uid } from "@/lib/store";
 import type { FamilyMember } from "@/lib/types";
 
-export async function GET() {
+export const GET = withErrorHandling(async () => {
   return NextResponse.json(db().members);
-}
+});
 
-export async function POST(req: Request) {
-  const body = (await req.json()) as Partial<FamilyMember>;
+export const POST = withErrorHandling(async (req: Request) => {
+  const body = await parseJsonBody<Partial<FamilyMember>>(req);
   const member: FamilyMember = {
     id: uid("m"),
     name: body.name ?? "Unnamed",
@@ -28,4 +29,4 @@ export async function POST(req: Request) {
   db().members.push(member);
   logAudit("Member added", member.name);
   return NextResponse.json(member, { status: 201 });
-}
+});

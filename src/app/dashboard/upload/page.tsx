@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import { MemberSelect } from "@/components/shared/member-select";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -174,20 +175,11 @@ export default function UploadPage() {
         <Card className="gap-0 rounded-2xl border-border/70 p-6 shadow-soft">
           <div className="mb-4 max-w-xs">
             <Label className="mb-1.5 block">Family member</Label>
-            <Select
+            <MemberSelect
               value={memberId}
-              onValueChange={(v) => setMemberId(v ?? "")}
-              items={(members ?? []).map((m) => ({ value: m.id, label: m.name }))}
-            >
-              <SelectTrigger className="h-9 w-full">
-                <SelectValue placeholder="Select member" />
-              </SelectTrigger>
-              <SelectContent>
-                {(members ?? []).map((m) => (
-                  <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onValueChange={setMemberId}
+              members={members}
+            />
           </div>
 
           {stage === "idle" && (

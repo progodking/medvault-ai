@@ -14,15 +14,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { MemberSelect } from "@/components/shared/member-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useCreateMedicine } from "@/hooks/use-medicines";
 import { useMembers } from "@/hooks/use-members";
@@ -93,16 +87,11 @@ export function MedicineFormDialog({ trigger }: { trigger: ReactNode }) {
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label>Member</Label>
-            <Select
+            <MemberSelect
               value={memberId}
-              onValueChange={(v) => setMemberId(v ?? "")}
-              items={(members ?? []).map((m) => ({ value: m.id, label: m.name }))}
-            >
-              <SelectTrigger className="h-9 w-full"><SelectValue placeholder="Select member" /></SelectTrigger>
-              <SelectContent>
-                {(members ?? []).map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+              onValueChange={setMemberId}
+              members={members}
+            />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">

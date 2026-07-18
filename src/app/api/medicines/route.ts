@@ -1,15 +1,12 @@
 import { NextResponse } from "next/server";
 
+import { addItem, queryByMember } from "@/lib/api-crud";
 import { parseJsonBody, withErrorHandling } from "@/lib/http";
-import { db, logAudit, uid } from "@/lib/store";
+import { db, uid } from "@/lib/store";
 import type { Medicine } from "@/lib/types";
 
 export const GET = withErrorHandling(async (req: Request) => {
-  const { searchParams } = new URL(req.url);
-  const memberId = searchParams.get("memberId");
-  let medicines = db().medicines;
-  if (memberId) medicines = medicines.filter((m) => m.memberId === memberId);
-  return NextResponse.json(medicines);
+  return NextResponse.json(queryByMember(db().medicines, req));
 });
 
 export const POST = withErrorHandling(async (req: Request) => {
@@ -27,7 +24,8 @@ export const POST = withErrorHandling(async (req: Request) => {
     expiryDate: body.expiryDate,
     createdAt: new Date().toISOString(),
   };
-  db().medicines.push(medicine);
-  logAudit("Medicine added", medicine.name);
-  return NextResponse.json(medicine, { status: 201 });
+  return addItem(db().medicines, medicine, {
+    action: "Medicine added",
+    target: medicine.name,
+  });
 });

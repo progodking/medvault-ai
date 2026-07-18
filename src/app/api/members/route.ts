@@ -1,18 +1,17 @@
 import { NextResponse } from "next/server";
 
-import { addItem } from "@/lib/api-crud";
 import { parseJsonBody, withErrorHandling } from "@/lib/http";
-import { db, uid } from "@/lib/store";
+import { createMember, listMembers, newId } from "@/lib/repo";
 import type { FamilyMember } from "@/lib/types";
 
 export const GET = withErrorHandling(async () => {
-  return NextResponse.json(db().members);
+  return NextResponse.json(await listMembers());
 });
 
 export const POST = withErrorHandling(async (req: Request) => {
   const body = await parseJsonBody<Partial<FamilyMember>>(req);
   const member: FamilyMember = {
-    id: uid("m"),
+    id: newId("m"),
     name: body.name ?? "Unnamed",
     relationship: body.relationship ?? "Other",
     dateOfBirth: body.dateOfBirth ?? new Date().toISOString().slice(0, 10),
@@ -27,8 +26,5 @@ export const POST = withErrorHandling(async (req: Request) => {
     weightKg: body.weightKg,
     createdAt: new Date().toISOString(),
   };
-  return addItem(db().members, member, {
-    action: "Member added",
-    target: member.name,
-  });
+  return NextResponse.json(await createMember(member), { status: 201 });
 });

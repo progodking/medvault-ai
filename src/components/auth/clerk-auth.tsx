@@ -18,11 +18,20 @@ export function ClerkAuth({ mode }: { mode: "login" | "signup" }) {
   };
 
   return mode === "signup" ? (
-    <SignUp
-      appearance={appearance}
-      signInUrl="/login"
-      forceRedirectUrl="/dashboard"
-    />
+    <>
+      <SignUp
+        appearance={appearance}
+        signInUrl="/login"
+        forceRedirectUrl="/dashboard"
+      />
+      {/*
+        Designates where Clerk renders the Smart CAPTCHA. Without this element
+        Clerk falls back to an invisible/modal widget that can fail on localhost
+        with Cloudflare Turnstile error 600010. See:
+        https://clerk.com/docs/guides/development/managing-bot-protection
+      */}
+      <div id="clerk-captcha" />
+    </>
   ) : (
     <SignIn
       appearance={appearance}

@@ -1,18 +1,18 @@
 import { NextResponse } from "next/server";
 
-import { addItem, queryByMember } from "@/lib/api-crud";
 import { parseJsonBody, withErrorHandling } from "@/lib/http";
-import { db, uid } from "@/lib/store";
+import { createMedicine, listMedicines, newId } from "@/lib/repo";
 import type { Medicine } from "@/lib/types";
 
 export const GET = withErrorHandling(async (req: Request) => {
-  return NextResponse.json(queryByMember(db().medicines, req));
+  const memberId = new URL(req.url).searchParams.get("memberId") ?? undefined;
+  return NextResponse.json(await listMedicines(memberId));
 });
 
 export const POST = withErrorHandling(async (req: Request) => {
   const body = await parseJsonBody<Partial<Medicine>>(req);
   const medicine: Medicine = {
-    id: uid("med"),
+    id: newId("med"),
     memberId: body.memberId ?? "",
     name: body.name ?? "Medicine",
     dosage: body.dosage ?? "",
@@ -24,8 +24,5 @@ export const POST = withErrorHandling(async (req: Request) => {
     expiryDate: body.expiryDate,
     createdAt: new Date().toISOString(),
   };
-  return addItem(db().medicines, medicine, {
-    action: "Medicine added",
-    target: medicine.name,
-  });
+  return NextResponse.json(await createMedicine(medicine), { status: 201 });
 });

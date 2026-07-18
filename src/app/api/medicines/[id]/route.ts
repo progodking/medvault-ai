@@ -1,19 +1,21 @@
-import { deleteItem, updateItem } from "@/lib/api-crud";
-import { withErrorHandling } from "@/lib/http";
-import { db, logAudit } from "@/lib/store";
+import { NextResponse } from "next/server";
+
+import { parseJsonBody, withErrorHandling } from "@/lib/http";
+import { deleteMedicine, updateMedicine } from "@/lib/repo";
+import type { Medicine } from "@/lib/types";
 
 type Params = { params: Promise<{ id: string }> };
 
 export const PUT = withErrorHandling(async (req: Request, { params }: Params) => {
   const { id } = await params;
-  return updateItem(db().medicines, id, req, (medicine) =>
-    logAudit("Medicine updated", medicine.name),
-  );
+  const body = await parseJsonBody<Partial<Medicine>>(req);
+  const medicine = await updateMedicine(id, body);
+  if (!medicine) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  return NextResponse.json(medicine);
 });
 
 export const DELETE = withErrorHandling(async (_req: Request, { params }: Params) => {
   const { id } = await params;
-  return deleteItem(db().medicines, id, (medicine) =>
-    logAudit("Medicine deleted", medicine.name),
-  );
+  await deleteMedicine(id);
+  return NextResponse.json({ ok: true });
 });

@@ -1,21 +1,18 @@
 import { NextResponse } from "next/server";
 
-import { addItem, queryByMember } from "@/lib/api-crud";
 import { parseJsonBody, withErrorHandling } from "@/lib/http";
-import { db, uid } from "@/lib/store";
+import { createReminder, listReminders, newId } from "@/lib/repo";
 import type { Reminder } from "@/lib/types";
 
 export const GET = withErrorHandling(async (req: Request) => {
-  const reminders = queryByMember(db().reminders, req, (a, b) =>
-    a.dateTime.localeCompare(b.dateTime),
-  );
-  return NextResponse.json(reminders);
+  const memberId = new URL(req.url).searchParams.get("memberId") ?? undefined;
+  return NextResponse.json(await listReminders(memberId));
 });
 
 export const POST = withErrorHandling(async (req: Request) => {
   const body = await parseJsonBody<Partial<Reminder>>(req);
   const reminder: Reminder = {
-    id: uid("rem"),
+    id: newId("rem"),
     memberId: body.memberId ?? "",
     type: body.type ?? "Medicine",
     title: body.title ?? "Reminder",
@@ -25,8 +22,5 @@ export const POST = withErrorHandling(async (req: Request) => {
     completed: false,
     createdAt: new Date().toISOString(),
   };
-  return addItem(db().reminders, reminder, {
-    action: "Reminder created",
-    target: reminder.title,
-  });
+  return NextResponse.json(await createReminder(reminder), { status: 201 });
 });

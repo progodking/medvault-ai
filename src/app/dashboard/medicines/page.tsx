@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, Pill, Plus, Sun, Sunrise, Sunset, Trash2 } from "lucide-react";
+import { AlertTriangle, Clock, Pill, Plus, ShieldCheck, Sun, Sunrise, Sunset, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { MedicineExplainDialog } from "@/components/dashboard/medicine-explain-dialog";
@@ -20,6 +20,7 @@ import {
 } from "@/hooks/use-medicines";
 import { useMembers } from "@/hooks/use-members";
 import { formatDate, isExpired } from "@/lib/format";
+import { detectWarnings } from "@/lib/interactions";
 import type { Frequency, Medicine } from "@/lib/types";
 
 const FREQ_ICON: Record<Frequency, typeof Sun> = {
@@ -106,6 +107,74 @@ function MedicineCard({ med, memberName }: { med: Medicine; memberName: string }
   );
 }
 
+function SafetyBanner({
+  medicines,
+  memberName,
+}: {
+  medicines: Medicine[];
+  memberName: (id: string) => string;
+}) {
+  const warnings = detectWarnings(medicines, memberName);
+
+  if (warnings.length === 0) {
+    return (
+      <Card className="flex-row items-center gap-3 rounded-2xl border-success/30 bg-success/5 p-4 shadow-soft">
+        <span className="flex size-9 items-center justify-center rounded-lg bg-success/10 text-success">
+          <ShieldCheck className="size-5" />
+        </span>
+        <div>
+          <p className="text-sm font-medium">No interaction or duplicate risks detected</p>
+          <p className="text-xs text-muted-foreground">
+            We checked active medicines across your family for common conflicts.
+          </p>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="gap-0 rounded-2xl border-warning/40 bg-warning/5 p-5 shadow-soft">
+      <div className="flex items-center gap-2">
+        <AlertTriangle className="size-5 text-warning" />
+        <h2 className="font-heading text-sm font-semibold">
+          {warnings.length} safety {warnings.length === 1 ? "check" : "checks"} to review
+        </h2>
+      </div>
+      <div className="mt-3 space-y-2">
+        {warnings.map((w, i) => (
+          <div
+            key={`${w.title}-${i}`}
+            className="flex items-start gap-3 rounded-xl border border-border bg-card p-3"
+          >
+            <Badge
+              variant="outline"
+              className={
+                w.severity === "high"
+                  ? "border-destructive/40 text-destructive"
+                  : "border-warning/40 text-warning"
+              }
+            >
+              {w.severity === "high" ? "High" : "Moderate"}
+            </Badge>
+            <div className="flex-1">
+              <p className="text-sm font-medium">
+                {w.title}
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  {w.members.join(", ")}
+                </span>
+              </p>
+              <p className="text-xs text-muted-foreground">{w.detail}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-[11px] text-muted-foreground">
+        Automated checks are not a substitute for professional medical advice.
+      </p>
+    </Card>
+  );
+}
+
 export default function MedicinesPage() {
   const { data: medicines, isLoading } = useMedicines();
   const { data: members } = useMembers();
@@ -146,6 +215,8 @@ export default function MedicinesPage() {
           {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-56 rounded-2xl" />)}
         </div>
       ) : (
+        <>
+        <SafetyBanner medicines={active} memberName={memberName} />
         <Tabs defaultValue="active">
           <TabsList>
             <TabsTrigger value="active">Active ({active.length})</TabsTrigger>
@@ -156,6 +227,7 @@ export default function MedicinesPage() {
           <TabsContent value="expired" className="mt-6">{grid(expired)}</TabsContent>
           <TabsContent value="all" className="mt-6">{grid(medicines ?? [])}</TabsContent>
         </Tabs>
+        </>
       )}
     </div>
   );

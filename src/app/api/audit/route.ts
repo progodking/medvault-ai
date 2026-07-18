@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { withErrorHandling } from "@/lib/http";
-import { db } from "@/lib/store";
+import { listAudit } from "@/lib/repo";
 
 export const GET = withErrorHandling(async () => {
-  return NextResponse.json(db().audit);
+  return NextResponse.json(await listAudit());
 });

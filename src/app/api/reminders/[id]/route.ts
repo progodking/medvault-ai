@@ -1,17 +1,21 @@
-import { deleteItem, updateItem } from "@/lib/api-crud";
-import { withErrorHandling } from "@/lib/http";
-import { db, logAudit } from "@/lib/store";
+import { NextResponse } from "next/server";
+
+import { parseJsonBody, withErrorHandling } from "@/lib/http";
+import { deleteReminder, updateReminder } from "@/lib/repo";
+import type { Reminder } from "@/lib/types";
 
 type Params = { params: Promise<{ id: string }> };
 
 export const PUT = withErrorHandling(async (req: Request, { params }: Params) => {
   const { id } = await params;
-  return updateItem(db().reminders, id, req);
+  const body = await parseJsonBody<Partial<Reminder>>(req);
+  const reminder = await updateReminder(id, body);
+  if (!reminder) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  return NextResponse.json(reminder);
 });
 
 export const DELETE = withErrorHandling(async (_req: Request, { params }: Params) => {
   const { id } = await params;
-  return deleteItem(db().reminders, id, (reminder) =>
-    logAudit("Reminder deleted", reminder.title),
-  );
+  await deleteReminder(id);
+  return NextResponse.json({ ok: true });
 });

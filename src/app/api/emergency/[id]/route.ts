@@ -1,19 +1,18 @@
 import { NextResponse } from "next/server";
 
-import { withErrorHandling } from "@/lib/http";
-import { db } from "@/lib/store";
 import { isExpired } from "@/lib/format";
+import { withErrorHandling } from "@/lib/http";
+import { getMember, listMedicines } from "@/lib/repo";
 
 type Params = { params: Promise<{ id: string }> };
 
 export const GET = withErrorHandling(async (_req: Request, { params }: Params) => {
   const { id } = await params;
-  const data = db();
-  const member = data.members.find((m) => m.id === id);
+  const member = await getMember(id);
   if (!member) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const currentMedicines = data.medicines
-    .filter((m) => m.memberId === id && !isExpired(m.expiryDate))
+  const currentMedicines = (await listMedicines(id))
+    .filter((m) => !isExpired(m.expiryDate))
     .map((m) => `${m.name} ${m.dosage}`);
 
   return NextResponse.json({

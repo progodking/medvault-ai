@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { parseJsonBody, withErrorHandling } from "@/lib/http";
-import { db } from "@/lib/store";
+import { listRecords } from "@/lib/repo";
 import type { MedicalRecord, RecordCategory } from "@/lib/types";
 import { RECORD_CATEGORIES } from "@/lib/constants";
 
@@ -25,8 +25,7 @@ export const POST = withErrorHandling(async (req: Request) => {
     return NextResponse.json({ error: "Query required" }, { status: 400 });
 
   const q = query.toLowerCase();
-  let records = db().records;
-  if (memberId) records = records.filter((r) => r.memberId === memberId);
+  const records = await listRecords(memberId);
 
   // Year
   const yearMatch = q.match(/\b(19|20)\d{2}\b/);

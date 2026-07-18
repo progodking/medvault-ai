@@ -1,21 +1,18 @@
 import { NextResponse } from "next/server";
 
-import { addItem, queryByMember } from "@/lib/api-crud";
 import { parseJsonBody, withErrorHandling } from "@/lib/http";
-import { db, uid } from "@/lib/store";
+import { createRecord, listRecords, newId } from "@/lib/repo";
 import type { MedicalRecord } from "@/lib/types";
 
 export const GET = withErrorHandling(async (req: Request) => {
-  const records = queryByMember(db().records, req, (a, b) =>
-    b.date.localeCompare(a.date),
-  );
-  return NextResponse.json(records);
+  const memberId = new URL(req.url).searchParams.get("memberId") ?? undefined;
+  return NextResponse.json(await listRecords(memberId));
 });
 
 export const POST = withErrorHandling(async (req: Request) => {
   const body = await parseJsonBody<Partial<MedicalRecord>>(req);
   const record: MedicalRecord = {
-    id: uid("r"),
+    id: newId("r"),
     memberId: body.memberId ?? "",
     title: body.title ?? "Untitled record",
     category: body.category ?? "Report",
@@ -30,8 +27,5 @@ export const POST = withErrorHandling(async (req: Request) => {
     tags: body.tags ?? [],
     createdAt: new Date().toISOString(),
   };
-  return addItem(db().records, record, {
-    action: "Report uploaded",
-    target: record.title,
-  });
+  return NextResponse.json(await createRecord(record), { status: 201 });
 });

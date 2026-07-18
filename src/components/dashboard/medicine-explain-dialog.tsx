@@ -2,6 +2,7 @@
 
 import { AlertTriangle, Loader2, Sparkles } from "lucide-react";
 import { useState, type ReactNode } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -26,9 +27,12 @@ export function MedicineExplainDialog({ medicine, trigger }: Props) {
   const [explanation, setExplanation] = useState("");
   const [source, setSource] = useState<string>("");
 
+  const [error, setError] = useState("");
+
   const explain = async () => {
     setLoading(true);
     setExplanation("");
+    setError("");
     try {
       const res = await api.post<{ explanation: string; source: string }>(
         "/api/ai/explain-medicine",
@@ -36,6 +40,11 @@ export function MedicineExplainDialog({ medicine, trigger }: Props) {
       );
       setExplanation(res.explanation);
       setSource(res.source);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Couldn't load the explanation.";
+      setError(message);
+      toast.error("Explanation failed", { description: message });
     } finally {
       setLoading(false);
     }
@@ -64,6 +73,16 @@ export function MedicineExplainDialog({ medicine, trigger }: Props) {
         {loading ? (
           <div className="flex items-center justify-center gap-2 py-12 text-muted-foreground">
             <Loader2 className="size-5 animate-spin text-primary" /> Generating explanation…
+          </div>
+        ) : error ? (
+          <div className="space-y-4">
+            <div className="flex gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+              <AlertTriangle className="size-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+            <Button variant="outline" onClick={explain} className="w-full">
+              Try again
+            </Button>
           </div>
         ) : (
           <div className="space-y-4">

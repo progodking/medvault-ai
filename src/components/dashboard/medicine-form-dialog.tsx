@@ -14,15 +14,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { MemberSelect } from "@/components/shared/member-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useCreateMedicine } from "@/hooks/use-medicines";
 import { useMembers } from "@/hooks/use-members";
@@ -56,23 +50,29 @@ export function MedicineFormDialog({ trigger }: { trigger: ReactNode }) {
   const submit = async () => {
     if (!memberId) return toast.error("Select a member");
     if (!name) return toast.error("Enter a medicine name");
-    await create.mutateAsync({
-      memberId,
-      name,
-      dosage,
-      schedule,
-      startDate: new Date().toISOString().slice(0, 10),
-      expiryDate: expiryDate || undefined,
-      reminderEnabled,
-      notes: notes || undefined,
-    });
-    toast.success("Medicine added");
-    setOpen(false);
-    setName("");
-    setDosage("");
-    setSchedule(["morning"]);
-    setExpiryDate("");
-    setNotes("");
+    try {
+      await create.mutateAsync({
+        memberId,
+        name,
+        dosage,
+        schedule,
+        startDate: new Date().toISOString().slice(0, 10),
+        expiryDate: expiryDate || undefined,
+        reminderEnabled,
+        notes: notes || undefined,
+      });
+      toast.success("Medicine added");
+      setOpen(false);
+      setName("");
+      setDosage("");
+      setSchedule(["morning"]);
+      setExpiryDate("");
+      setNotes("");
+    } catch (err) {
+      toast.error("Couldn't add medicine", {
+        description: err instanceof Error ? err.message : "Please try again.",
+      });
+    }
   };
 
   return (
@@ -87,16 +87,11 @@ export function MedicineFormDialog({ trigger }: { trigger: ReactNode }) {
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label>Member</Label>
-            <Select
+            <MemberSelect
               value={memberId}
-              onValueChange={(v) => setMemberId(v ?? "")}
-              items={(members ?? []).map((m) => ({ value: m.id, label: m.name }))}
-            >
-              <SelectTrigger className="h-9 w-full"><SelectValue placeholder="Select member" /></SelectTrigger>
-              <SelectContent>
-                {(members ?? []).map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+              onValueChange={setMemberId}
+              members={members}
+            />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">

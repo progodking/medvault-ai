@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 
+import { withErrorHandling } from "@/lib/http";
 import { db } from "@/lib/store";
 import { isExpired } from "@/lib/format";
 
 type Params = { params: Promise<{ id: string }> };
 
-export async function GET(_req: Request, { params }: Params) {
+export const GET = withErrorHandling(async (_req: Request, { params }: Params) => {
   const { id } = await params;
   const data = db();
   const member = data.members.find((m) => m.id === id);
@@ -26,4 +27,4 @@ export async function GET(_req: Request, { params }: Params) {
     emergencyContactName: member.emergencyContactName,
     emergencyContactPhone: member.emergencyContactPhone,
   });
-}
+});

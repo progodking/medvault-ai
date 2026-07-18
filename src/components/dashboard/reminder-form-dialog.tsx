@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { MemberSelect } from "@/components/shared/member-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -43,20 +44,26 @@ export function ReminderFormDialog({ trigger }: { trigger: ReactNode }) {
     if (!memberId) return toast.error("Select a member");
     if (!title) return toast.error("Enter a title");
     if (!dateTime) return toast.error("Pick a date & time");
-    await create.mutateAsync({
-      memberId,
-      title,
-      type,
-      dateTime: new Date(dateTime).toISOString(),
-      notes: notes || undefined,
-      completed: false,
-      channels: ["push", "email"],
-    });
-    toast.success("Reminder created");
-    setOpen(false);
-    setTitle("");
-    setDateTime("");
-    setNotes("");
+    try {
+      await create.mutateAsync({
+        memberId,
+        title,
+        type,
+        dateTime: new Date(dateTime).toISOString(),
+        notes: notes || undefined,
+        completed: false,
+        channels: ["push", "email"],
+      });
+      toast.success("Reminder created");
+      setOpen(false);
+      setTitle("");
+      setDateTime("");
+      setNotes("");
+    } catch (err) {
+      toast.error("Couldn't create reminder", {
+        description: err instanceof Error ? err.message : "Please try again.",
+      });
+    }
   };
 
   return (
@@ -73,16 +80,11 @@ export function ReminderFormDialog({ trigger }: { trigger: ReactNode }) {
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label>Member</Label>
-            <Select
+            <MemberSelect
               value={memberId}
-              onValueChange={(v) => setMemberId(v ?? "")}
-              items={(members ?? []).map((m) => ({ value: m.id, label: m.name }))}
-            >
-              <SelectTrigger className="h-9 w-full"><SelectValue placeholder="Select member" /></SelectTrigger>
-              <SelectContent>
-                {(members ?? []).map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+              onValueChange={setMemberId}
+              members={members}
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="rtitle">Title</Label>

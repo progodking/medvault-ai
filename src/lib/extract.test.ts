@@ -1,43 +1,182 @@
-import assert from "node:assert/strict";
-import { test } from "node:test";
+import { describe, expect, it } from "vitest";
 
 import { extractFields } from "./extract";
 
-test("doctor name: extracts uppercase OCR names", () => {
-  assert.equal(extractFields("Dr. MEHTA\nDiagnosis: Fever").doctorName, "Dr. MEHTA");
-  assert.equal(extractFields("DR. PRIYA SINGH").doctorName, "Dr. PRIYA SINGH");
+describe("extractFields — category detection", () => {
+  it("detects a Prescription from Rx / dosage cues", () => {
+    expect(extractFields("Rx\nTab. Metformin 500mg twice daily").category).toBe(
+      "Prescription",
+    );
+  });
+
+  it("detects a Bill from invoice / amount cues", () => {
+    expect(extractFields("Invoice\nTotal amount paid: Rs. 1200").category).toBe(
+      "Bill",
+    );
+  });
+
+  it("detects a Scan from radiology cues", () => {
+    expect(extractFields("MRI Brain\nImpression: normal study").category).toBe(
+      "Scan",
+    );
+  });
+
+  it("detects a Vaccination", () => {
+    expect(extractFields("Vaccination record: 2nd dose").category).toBe(
+      "Vaccination",
+    );
+  });
+
+  it("detects a Visit / consultation", () => {
+    expect(extractFields("OPD consultation follow-up").category).toBe("Visit");
+  });
+
+  it("falls back to Report when nothing matches", () => {
+    expect(extractFields("Complete blood count results").category).toBe(
+      "Report",
+    );
+  });
 });
 
-test("doctor name: extracts mixed-case names and single-letter initials", () => {
-  assert.equal(extractFields("Dr. Rajesh Kumar").doctorName, "Dr. Rajesh Kumar");
-  assert.equal(extractFields("Dr. R K Sharma").doctorName, "Dr. R K Sharma");
+describe("extractFields — date parsing", () => {
+  it("parses dd/mm/yyyy", () => {
+    expect(extractFields("Date: 09/06/2025").date).toBe("2025-06-09");
+  });
+
+  it("parses dd-mm-yy and expands the two-digit year", () => {
+    expect(extractFields("Visit on 5-3-24").date).toBe("2024-03-05");
+  });
+
+  it("parses a worded date like '10 Jun 2025'", () => {
+    expect(extractFields("Reported 10 Jun 2025").date).toBe("2025-06-10");
+  });
+
+  it("parses a worded date with a full month name", () => {
+    expect(extractFields("Dated 3 January 2023").date).toBe("2023-01-03");
+  });
+
+  it("returns undefined when no date is present", () => {
+    expect(extractFields("No date here").date).toBeUndefined();
+  });
 });
 
-test("doctor name: strips trailing field label grabbed by the run", () => {
-  assert.equal(extractFields("Dr. Mehta Diagnosis: Viral fever").doctorName, "Dr. Mehta");
+describe("extractFields — doctor name", () => {
+  it("extracts and prefixes a bare name with Dr.", () => {
+    expect(extractFields("Doctor: Rahul Verma").doctorName).toBe(
+      "Dr. Rahul Verma",
+    );
+  });
+
+  it("keeps an existing Dr. prefix without duplicating it", () => {
+    expect(extractFields("Dr. Anita Desai\nCardiology").doctorName).toBe(
+      "Dr. Anita Desai",
+    );
+  });
+
+  it("extracts uppercase OCR names", () => {
+    expect(extractFields("Dr. MEHTA\nDiagnosis: Fever").doctorName).toBe(
+      "Dr. MEHTA",
+    );
+    expect(extractFields("DR. PRIYA SINGH").doctorName).toBe("Dr. PRIYA SINGH");
+  });
+
+  it("extracts single-letter initials", () => {
+    expect(extractFields("Dr. R K Sharma").doctorName).toBe("Dr. R K Sharma");
+  });
+
+  it("strips a trailing field label grabbed by the run", () => {
+    expect(extractFields("Dr. Mehta Diagnosis: Viral fever").doctorName).toBe(
+      "Dr. Mehta",
+    );
+  });
+
+  it("does not match 'dr' inside another word", () => {
+    expect(
+      extractFields("Consulted Andrew earlier today").doctorName,
+    ).toBeUndefined();
+  });
+
+  it("returns undefined when no doctor is present", () => {
+    expect(extractFields("Lab report only").doctorName).toBeUndefined();
+  });
 });
 
-test("doctor name: 'Doctor:' label form", () => {
-  assert.equal(extractFields("Doctor: Anil Kumar").doctorName, "Dr. Anil Kumar");
+describe("extractFields — hospital", () => {
+  it("extracts a hospital name by keyword", () => {
+    expect(extractFields("Apollo Hospital, Delhi").hospital).toContain(
+      "Apollo Hospital",
+    );
+  });
+
+  it("extracts a clinic name", () => {
+    expect(extractFields("Sunrise Clinic").hospital).toContain("Sunrise Clinic");
+  });
+
+  it("returns undefined when no facility is present", () => {
+    expect(extractFields("Patient notes").hospital).toBeUndefined();
+  });
 });
 
-test("doctor name: does not match 'dr' inside another word", () => {
-  assert.equal(extractFields("Consulted Andrew earlier today").doctorName, undefined);
+describe("extractFields — diagnosis", () => {
+  it("captures text after a Diagnosis label", () => {
+    expect(extractFields("Diagnosis: Type 2 Diabetes").diagnosis).toContain(
+      "Type 2 Diabetes",
+    );
+  });
+
+  it("captures an Impression label", () => {
+    expect(extractFields("Impression: mild cardiomegaly").diagnosis).toContain(
+      "mild cardiomegaly",
+    );
+  });
 });
 
-test("medicines: captures prefixed and plain dosage forms", () => {
-  const meds = extractFields("Tab. Metformin 500mg\nAtorvastatin 10 mg").medicines;
-  assert.deepEqual(meds, ["Metformin 500mg", "Atorvastatin 10mg"]);
-});
+describe("extractFields — medicines", () => {
+  it("extracts a prefixed medicine with its dose", () => {
+    expect(extractFields("Tab. Metformin 500mg").medicines).toContain(
+      "Metformin 500mg",
+    );
+  });
 
-test("medicines: ignores lab-report concentrations (mg/dL)", () => {
-  const meds = extractFields(
-    "Serum Creatinine 1.2 mg/dL\nCholesterol 190 mg/dL\nHaemoglobin 13 g/dL",
-  ).medicines;
-  assert.deepEqual(meds, []);
-});
+  it("extracts a plain medicine line with a dose", () => {
+    expect(extractFields("Atorvastatin 10 mg at night").medicines).toContain(
+      "Atorvastatin 10mg",
+    );
+  });
 
-test("medicines: ignores common bare lab analytes", () => {
-  const meds = extractFields("Cholesterol 190 mg\nUrea 30 mg").medicines;
-  assert.deepEqual(meds, []);
+  it("de-duplicates repeated medicines", () => {
+    const meds = extractFields(
+      "Tab. Metformin 500mg\nTab. Metformin 500mg",
+    ).medicines;
+    expect(meds.filter((m) => m === "Metformin 500mg")).toHaveLength(1);
+  });
+
+  it("skips non-medicine leaders like Age/Weight", () => {
+    const meds = extractFields("Age 45 years\nWeight 70 kg").medicines;
+    expect(meds).toEqual([]);
+  });
+
+  it("ignores lab-report concentrations (mg/dL)", () => {
+    const meds = extractFields(
+      "Serum Creatinine 1.2 mg/dL\nCholesterol 190 mg/dL\nHaemoglobin 13 g/dL",
+    ).medicines;
+    expect(meds).toEqual([]);
+  });
+
+  it("ignores common bare lab analytes", () => {
+    const meds = extractFields("Cholesterol 190 mg\nUrea 30 mg").medicines;
+    expect(meds).toEqual([]);
+  });
+
+  it("caps the result at 8 medicines", () => {
+    const text = Array.from(
+      { length: 12 },
+      (_, i) => `Tab. Medicine${String.fromCharCode(65 + i)} ${100 + i}mg`,
+    ).join("\n");
+    expect(extractFields(text).medicines.length).toBeLessThanOrEqual(8);
+  });
+
+  it("returns an empty array when no medicines are present", () => {
+    expect(extractFields("General health checkup").medicines).toEqual([]);
+  });
 });

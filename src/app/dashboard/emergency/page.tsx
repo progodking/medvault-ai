@@ -9,17 +9,11 @@ import {
   EmergencyCardView,
   type EmergencyData,
 } from "@/components/emergency/emergency-card-view";
+import { MemberSelect } from "@/components/shared/member-select";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api-client";
 import { useMembers } from "@/hooks/use-members";
@@ -48,14 +42,22 @@ export default function EmergencyPage() {
           url: shareUrl,
         });
         return;
-      } catch {
-        /* cancelled */
+      } catch (err) {
+        // The user dismissing the share sheet is not an error — stop here.
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        // Any other failure falls back to copying the link below.
       }
     }
-    await navigator.clipboard.writeText(shareUrl);
-    toast.success("Secure link copied", {
-      description: "Single-use link expires in 24 hours.",
-    });
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Secure link copied", {
+        description: "Single-use link expires in 24 hours.",
+      });
+    } catch {
+      toast.error("Couldn't share the link", {
+        description: "Copy it manually from your browser's address bar.",
+      });
+    }
   };
 
   return (
@@ -68,16 +70,11 @@ export default function EmergencyPage() {
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         <Card className="h-fit gap-0 rounded-2xl border-border/70 p-6 shadow-soft">
           <Label className="mb-1.5 block">Member</Label>
-          <Select
+          <MemberSelect
             value={memberId}
-            onValueChange={(v) => setSelectedId(v ?? "")}
-            items={(members ?? []).map((m) => ({ value: m.id, label: m.name }))}
-          >
-            <SelectTrigger className="h-9 w-full"><SelectValue placeholder="Select member" /></SelectTrigger>
-            <SelectContent>
-              {(members ?? []).map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+            onValueChange={setSelectedId}
+            members={members}
+          />
 
           <div className="mt-5 space-y-2">
             <Button onClick={share} variant="outline" className="w-full gap-2" disabled={!data}>

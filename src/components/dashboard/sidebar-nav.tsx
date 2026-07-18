@@ -1,11 +1,10 @@
 "use client";
 
-import { HardDrive, Sparkles } from "lucide-react";
+import { HardDrive } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { Logo } from "@/components/brand/logo";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useStats } from "@/hooks/use-stats";
 import { DASHBOARD_NAV } from "@/lib/constants";
@@ -69,21 +68,9 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
           <p className="mt-2 text-xs text-muted-foreground">
             {formatBytes(used)} of {formatBytes(total)} used
           </p>
-        </div>
-
-        <div className="overflow-hidden rounded-2xl brand-gradient p-4 text-white">
-          <Sparkles className="size-5" />
-          <p className="mt-2 font-heading text-sm font-semibold">
-            Upgrade to Premium
+          <p className="mt-1 text-xs font-medium text-primary">
+            Free forever — every feature included.
           </p>
-          <p className="mt-1 text-xs text-white/85">
-            Unlimited members, 20GB & advanced AI.
-          </p>
-          <Button
-            size="sm"
-            className="mt-3 h-8 w-full bg-white text-accent hover:bg-white/90"
-            render={<Link href="/pricing" onClick={onNavigate}>Upgrade</Link>}
-          />
         </div>
       </div>
     </div>

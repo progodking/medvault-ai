@@ -138,22 +138,28 @@ export default function UploadPage() {
       toast.error("Select a family member first");
       return;
     }
-    await create.mutateAsync({
-      memberId,
-      title: form.title || "Untitled record",
-      category: form.category,
-      date: form.date || new Date().toISOString().slice(0, 10),
-      doctorName: form.doctorName || undefined,
-      hospital: form.hospital || undefined,
-      diagnosis: form.diagnosis || undefined,
-      medicines: form.medicines
-        ? form.medicines.split(",").map((s) => s.trim()).filter(Boolean)
-        : [],
-      fileType,
-      tags: [form.category.toLowerCase(), (form.date || "").slice(0, 4)].filter(Boolean),
-    });
-    toast.success("Report saved to vault");
-    router.push("/dashboard/timeline");
+    try {
+      await create.mutateAsync({
+        memberId,
+        title: form.title || "Untitled record",
+        category: form.category,
+        date: form.date || new Date().toISOString().slice(0, 10),
+        doctorName: form.doctorName || undefined,
+        hospital: form.hospital || undefined,
+        diagnosis: form.diagnosis || undefined,
+        medicines: form.medicines
+          ? form.medicines.split(",").map((s) => s.trim()).filter(Boolean)
+          : [],
+        fileType,
+        tags: [form.category.toLowerCase(), (form.date || "").slice(0, 4)].filter(Boolean),
+      });
+      toast.success("Report saved to vault");
+      router.push("/dashboard/timeline");
+    } catch (err) {
+      toast.error("Couldn't save report", {
+        description: err instanceof Error ? err.message : "Please try again.",
+      });
+    }
   };
 
   return (

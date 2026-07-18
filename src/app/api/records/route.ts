@@ -1,19 +1,20 @@
 import { NextResponse } from "next/server";
 
+import { parseJsonBody, withErrorHandling } from "@/lib/http";
 import { db, logAudit, uid } from "@/lib/store";
 import type { MedicalRecord } from "@/lib/types";
 
-export async function GET(req: Request) {
+export const GET = withErrorHandling(async (req: Request) => {
   const { searchParams } = new URL(req.url);
   const memberId = searchParams.get("memberId");
   let records = db().records;
   if (memberId) records = records.filter((r) => r.memberId === memberId);
   records = [...records].sort((a, b) => b.date.localeCompare(a.date));
   return NextResponse.json(records);
-}
+});
 
-export async function POST(req: Request) {
-  const body = (await req.json()) as Partial<MedicalRecord>;
+export const POST = withErrorHandling(async (req: Request) => {
+  const body = await parseJsonBody<Partial<MedicalRecord>>(req);
   const record: MedicalRecord = {
     id: uid("r"),
     memberId: body.memberId ?? "",
@@ -33,4 +34,4 @@ export async function POST(req: Request) {
   db().records.push(record);
   logAudit("Report uploaded", record.title);
   return NextResponse.json(record, { status: 201 });
-}
+});

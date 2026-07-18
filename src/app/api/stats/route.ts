@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 
+import { withErrorHandling } from "@/lib/http";
 import { db } from "@/lib/store";
 import { isExpired } from "@/lib/format";
 
-export async function GET() {
+export const GET = withErrorHandling(async () => {
   const data = db();
   const upcomingReminders = data.reminders.filter(
     (r) => !r.completed && new Date(r.dateTime).getTime() > Date.now(),
@@ -20,4 +21,4 @@ export async function GET() {
     expiredMedicines,
     storage: data.storage,
   });
-}
+});

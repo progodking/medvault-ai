@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 
 import { AI_DISCLAIMER } from "@/lib/constants";
 import { generateWithGemini } from "@/lib/gemini";
+import { parseJsonBody, withErrorHandling } from "@/lib/http";
 
-export async function POST(req: Request) {
-  const { name } = (await req.json()) as { name?: string };
+export const POST = withErrorHandling(async (req: Request) => {
+  const { name } = await parseJsonBody<{ name?: string }>(req);
   if (!name)
     return NextResponse.json(
       { error: "Medicine name required" },
@@ -31,4 +32,4 @@ Keep it under 180 words. Do not give personalised dosing advice.`;
     disclaimer: AI_DISCLAIMER,
     source: ai ? "gemini" : "demo",
   });
-}
+});

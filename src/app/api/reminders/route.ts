@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 
+import { parseJsonBody, withErrorHandling } from "@/lib/http";
 import { db, logAudit, uid } from "@/lib/store";
 import type { Reminder } from "@/lib/types";
 
-export async function GET(req: Request) {
+export const GET = withErrorHandling(async (req: Request) => {
   const { searchParams } = new URL(req.url);
   const memberId = searchParams.get("memberId");
   let reminders = db().reminders;
@@ -12,10 +13,10 @@ export async function GET(req: Request) {
     a.dateTime.localeCompare(b.dateTime),
   );
   return NextResponse.json(reminders);
-}
+});
 
-export async function POST(req: Request) {
-  const body = (await req.json()) as Partial<Reminder>;
+export const POST = withErrorHandling(async (req: Request) => {
+  const body = await parseJsonBody<Partial<Reminder>>(req);
   const reminder: Reminder = {
     id: uid("rem"),
     memberId: body.memberId ?? "",
@@ -30,4 +31,4 @@ export async function POST(req: Request) {
   db().reminders.push(reminder);
   logAudit("Reminder created", reminder.title);
   return NextResponse.json(reminder, { status: 201 });
-}
+});

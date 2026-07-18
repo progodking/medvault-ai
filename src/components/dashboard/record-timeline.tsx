@@ -64,6 +64,13 @@ export function RecordTimeline({
                   onClick={() =>
                     del.mutate(r.id, {
                       onSuccess: () => toast.success("Record deleted"),
+                      onError: (err) =>
+                        toast.error("Couldn't delete record", {
+                          description:
+                            err instanceof Error
+                              ? err.message
+                              : "Please try again.",
+                        }),
                     })
                   }
                 >

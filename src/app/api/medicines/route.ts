@@ -1,18 +1,19 @@
 import { NextResponse } from "next/server";
 
+import { parseJsonBody, withErrorHandling } from "@/lib/http";
 import { db, logAudit, uid } from "@/lib/store";
 import type { Medicine } from "@/lib/types";
 
-export async function GET(req: Request) {
+export const GET = withErrorHandling(async (req: Request) => {
   const { searchParams } = new URL(req.url);
   const memberId = searchParams.get("memberId");
   let medicines = db().medicines;
   if (memberId) medicines = medicines.filter((m) => m.memberId === memberId);
   return NextResponse.json(medicines);
-}
+});
 
-export async function POST(req: Request) {
-  const body = (await req.json()) as Partial<Medicine>;
+export const POST = withErrorHandling(async (req: Request) => {
+  const body = await parseJsonBody<Partial<Medicine>>(req);
   const medicine: Medicine = {
     id: uid("med"),
     memberId: body.memberId ?? "",
@@ -29,4 +30,4 @@ export async function POST(req: Request) {
   db().medicines.push(medicine);
   logAudit("Medicine added", medicine.name);
   return NextResponse.json(medicine, { status: 201 });
-}
+});

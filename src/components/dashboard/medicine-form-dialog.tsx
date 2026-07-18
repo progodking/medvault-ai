@@ -56,23 +56,29 @@ export function MedicineFormDialog({ trigger }: { trigger: ReactNode }) {
   const submit = async () => {
     if (!memberId) return toast.error("Select a member");
     if (!name) return toast.error("Enter a medicine name");
-    await create.mutateAsync({
-      memberId,
-      name,
-      dosage,
-      schedule,
-      startDate: new Date().toISOString().slice(0, 10),
-      expiryDate: expiryDate || undefined,
-      reminderEnabled,
-      notes: notes || undefined,
-    });
-    toast.success("Medicine added");
-    setOpen(false);
-    setName("");
-    setDosage("");
-    setSchedule(["morning"]);
-    setExpiryDate("");
-    setNotes("");
+    try {
+      await create.mutateAsync({
+        memberId,
+        name,
+        dosage,
+        schedule,
+        startDate: new Date().toISOString().slice(0, 10),
+        expiryDate: expiryDate || undefined,
+        reminderEnabled,
+        notes: notes || undefined,
+      });
+      toast.success("Medicine added");
+      setOpen(false);
+      setName("");
+      setDosage("");
+      setSchedule(["morning"]);
+      setExpiryDate("");
+      setNotes("");
+    } catch (err) {
+      toast.error("Couldn't add medicine", {
+        description: err instanceof Error ? err.message : "Please try again.",
+      });
+    }
   };
 
   return (

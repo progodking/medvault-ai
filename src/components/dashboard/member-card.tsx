@@ -16,7 +16,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,6 +33,7 @@ import type { FamilyMember } from "@/lib/types";
 export function MemberCard({ member }: { member: FamilyMember }) {
   const del = useDeleteMember();
   const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   return (
     <Card className="group relative gap-0 overflow-hidden rounded-2xl border-border/70 p-0 shadow-soft transition-all hover:-translate-y-1 hover:shadow-glow">
@@ -58,43 +58,12 @@ export function MemberCard({ member }: { member: FamilyMember }) {
               <DropdownMenuItem onClick={() => setEditOpen(true)}>
                 <Pencil className="mr-2 size-4" /> Edit
               </DropdownMenuItem>
-              <AlertDialog>
-                <AlertDialogTrigger
-                  render={
-                    <DropdownMenuItem variant="destructive" onSelect={(e) => e.preventDefault()}>
-                      <Trash2 className="mr-2 size-4" /> Delete
-                    </DropdownMenuItem>
-                  }
-                />
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete {member.name}?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This removes the member and all their records, medicines and
-                      reminders. This cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() =>
-                        del.mutate(member.id, {
-                          onSuccess: () => toast.success(`${member.name} deleted`),
-                          onError: (err) =>
-                            toast.error("Couldn't delete member", {
-                              description:
-                                err instanceof Error
-                                  ? err.message
-                                  : "Please try again.",
-                            }),
-                        })
-                      }
-                    >
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => setDeleteOpen(true)}
+              >
+                <Trash2 className="mr-2 size-4" /> Delete
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -142,8 +111,38 @@ export function MemberCard({ member }: { member: FamilyMember }) {
         member={member}
         open={editOpen}
         onOpenChange={setEditOpen}
-        trigger={<span className="hidden" />}
       />
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {member.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes the member and all their records, medicines and
+              reminders. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() =>
+                del.mutate(member.id, {
+                  onSuccess: () => toast.success(`${member.name} deleted`),
+                  onError: (err) =>
+                    toast.error("Couldn't delete member", {
+                      description:
+                        err instanceof Error
+                          ? err.message
+                          : "Please try again.",
+                    }),
+                })
+              }
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

@@ -48,7 +48,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 interface MemberFormDialogProps {
-  trigger: ReactNode;
+  trigger?: ReactNode;
   member?: FamilyMember;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -139,7 +139,7 @@ export function MemberFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger render={trigger as React.ReactElement} />
+      {trigger && <DialogTrigger render={trigger as React.ReactElement} />}
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Edit member" : "Add family member"}</DialogTitle>

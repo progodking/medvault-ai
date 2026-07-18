@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 import { isGeminiEnabled } from "./env";
 
-const MODEL = "gemini-1.5-flash";
+const MODEL = "gemini-flash-latest";
 
 /**
  * Generate text with Gemini. Returns null when no API key is configured so the

@@ -1,0 +1,178 @@
+// MedVault AI — Prisma schema
+// Run: npx prisma generate && npx prisma migrate dev
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Relationship {
+  Self
+  Spouse
+  Son
+  Daughter
+  Father
+  Mother
+  Brother
+  Sister
+  Grandfather
+  Grandmother
+  Other
+}
+
+enum Gender {
+  Male
+  Female
+  Other
+}
+
+enum BloodGroup {
+  A_POS  @map("A+")
+  A_NEG  @map("A-")
+  B_POS  @map("B+")
+  B_NEG  @map("B-")
+  AB_POS @map("AB+")
+  AB_NEG @map("AB-")
+  O_POS  @map("O+")
+  O_NEG  @map("O-")
+}
+
+enum RecordCategory {
+  Report
+  Prescription
+  Bill
+  Scan
+  Visit
+  Vaccination
+}
+
+enum ReminderType {
+  Medicine
+  Appointment
+  LabTest      @map("Lab Test")
+  Vaccination
+}
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String?  @unique
+  email     String   @unique
+  name      String
+  avatarUrl String?
+  plan      String   @default("free")
+  language  String   @default("en")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members   FamilyMember[]
+  auditLogs AuditLog[]
+}
+
+model FamilyMember {
+  id                    String       @id @default(cuid())
+  userId                String
+  user                  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                  String
+  relationship          Relationship @default(Other)
+  dateOfBirth           DateTime
+  gender                Gender       @default(Other)
+  bloodGroup            BloodGroup
+  photoUrl              String?
+  conditions            String[]
+  allergies             String[]
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  heightCm              Int?
+  weightKg              Int?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  records   MedicalRecord[]
+  medicines Medicine[]
+  reminders Reminder[]
+
+  @@index([userId])
+}
+
+model MedicalRecord {
+  id         String         @id @default(cuid())
+  memberId   String
+  member     FamilyMember   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  title      String
+  category   RecordCategory @default(Report)
+  date       DateTime
+  doctorName String?
+  hospital   String?
+  diagnosis  String?
+  medicines  String[]
+  notes      String?
+  fileUrl    String?
+  fileType   String?
+  tags       String[]
+  createdAt  DateTime       @default(now())
+
+  @@index([memberId])
+  @@index([category])
+}
+
+model Medicine {
+  id              String       @id @default(cuid())
+  memberId        String
+  member          FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  name            String
+  dosage          String
+  schedule        String[] // morning | afternoon | night
+  startDate       DateTime
+  endDate         DateTime?
+  expiryDate      DateTime?
+  reminderEnabled Boolean      @default(true)
+  notes           String?
+  createdAt       DateTime     @default(now())
+
+  @@index([memberId])
+}
+
+model Reminder {
+  id        String       @id @default(cuid())
+  memberId  String
+  member    FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  type      ReminderType @default(Medicine)
+  title     String
+  dateTime  DateTime
+  notes     String?
+  channels  String[] // push | email
+  completed Boolean      @default(false)
+  createdAt DateTime     @default(now())
+
+  @@index([memberId])
+}
+
+model ShareLink {
+  id        String   @id @default(cuid())
+  memberId  String
+  token     String   @unique
+  singleUse Boolean  @default(true)
+  used      Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([memberId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  target    String
+  actor     String
+  ip        String?
+  timestamp DateTime @default(now())
+
+  @@index([userId])
+}

@@ -37,6 +37,14 @@ A ready OCR fixture lives at `/home/ubuntu/medvault-test/report.png`
 (Apollo Hospital · Dr. Mehta · Type 2 Diabetes · Metformin/Glimepiride/Atorvastatin).
 
 ## Things that have broken before (check these)
+- **In-memory DB is cached on `globalThis.__medvaultDb`** (`src/lib/store.ts`). It
+  survives HMR/Fast-Refresh and even branch switches within the same `next dev`
+  process, so after checking out a branch that adds a new DB field (e.g.
+  `shareLinks`) the stale cached object predates the field and `seed()` never
+  re-runs — causing `Cannot read properties of undefined` 500s. Fix: kill ALL
+  `next` processes, free port 3000, then start a fresh `npm run dev` so the store
+  re-seeds. Always do a clean restart after checking out a branch that changes
+  the store shape.
 - **OCR extraction** (`src/lib/extract.ts`): medicine parsing may miss plain
   `Name 500mg` lines (only matching `Tab./Cap.` prefixes), and the doctor regex
   can cross a newline and grab the next field label ("Mehta Diagnosis"). Verify a

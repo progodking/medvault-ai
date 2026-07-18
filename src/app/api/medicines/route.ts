@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
 
 import { addItem, queryByMember } from "@/lib/api-crud";
-import { parseJsonBody, withErrorHandling } from "@/lib/http";
+import { withErrorHandling } from "@/lib/http";
 import { db, uid } from "@/lib/store";
 import type { Medicine } from "@/lib/types";
+import { medicineCreateSchema, parseAndValidate } from "@/lib/validation";
 
 export const GET = withErrorHandling(async (req: Request) => {
   return NextResponse.json(queryByMember(db().medicines, req));
 });
 
 export const POST = withErrorHandling(async (req: Request) => {
-  const body = await parseJsonBody<Partial<Medicine>>(req);
+  const body = await parseAndValidate(req, medicineCreateSchema);
   const medicine: Medicine = {
     id: uid("med"),
     memberId: body.memberId ?? "",

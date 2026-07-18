@@ -1,3 +1,5 @@
+import { randomBytes } from "crypto";
+
 import {
   auditLogs as seedAudit,
   emergencyCards as seedEmergency,
@@ -14,6 +16,7 @@ import type {
   MedicalRecord,
   Medicine,
   Reminder,
+  ShareLink,
   StorageStat,
 } from "./types";
 
@@ -28,6 +31,7 @@ type DB = {
   medicines: Medicine[];
   reminders: Reminder[];
   emergency: EmergencyCard[];
+  shareLinks: ShareLink[];
   audit: AuditLogEntry[];
   storage: StorageStat;
 };
@@ -41,9 +45,42 @@ function seed(): DB {
     medicines: structuredClone(seedMedicines),
     reminders: structuredClone(seedReminders),
     emergency: structuredClone(seedEmergency),
+    shareLinks: [],
     audit: structuredClone(seedAudit),
     storage: structuredClone(seedStorage),
   };
+}
+
+const SHARE_LINK_TTL_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Mint (or reuse) an unguessable, time-limited share token for a member's
+ * emergency card. Reusing a still-valid token keeps the dashboard preview, QR
+ * code and shared URL in sync and avoids piling up links.
+ */
+export function createShareLink(memberId: string): ShareLink {
+  const data = db();
+  const now = Date.now();
+  const existing = data.shareLinks.find(
+    (l) => l.memberId === memberId && new Date(l.expiresAt).getTime() > now,
+  );
+  if (existing) return existing;
+  const link: ShareLink = {
+    token: randomBytes(24).toString("hex"),
+    memberId,
+    expiresAt: new Date(now + SHARE_LINK_TTL_MS).toISOString(),
+    createdAt: new Date(now).toISOString(),
+  };
+  data.shareLinks.push(link);
+  return link;
+}
+
+/** Resolve a share token to its link, or null when unknown or expired. */
+export function resolveShareLink(token: string): ShareLink | null {
+  const link = db().shareLinks.find((l) => l.token === token);
+  if (!link) return null;
+  if (new Date(link.expiresAt).getTime() <= Date.now()) return null;
+  return link;
 }
 
 export function db(): DB {

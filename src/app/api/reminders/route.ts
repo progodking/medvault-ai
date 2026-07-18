@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { addItem, queryByMember } from "@/lib/api-crud";
-import { parseJsonBody, withErrorHandling } from "@/lib/http";
+import { withErrorHandling } from "@/lib/http";
 import { db, uid } from "@/lib/store";
 import type { Reminder } from "@/lib/types";
+import { parseAndValidate, reminderCreateSchema } from "@/lib/validation";
 
 export const GET = withErrorHandling(async (req: Request) => {
   const reminders = queryByMember(db().reminders, req, (a, b) =>
@@ -13,7 +14,7 @@ export const GET = withErrorHandling(async (req: Request) => {
 });
 
 export const POST = withErrorHandling(async (req: Request) => {
-  const body = await parseJsonBody<Partial<Reminder>>(req);
+  const body = await parseAndValidate(req, reminderCreateSchema);
   const reminder: Reminder = {
     id: uid("rem"),
     memberId: body.memberId ?? "",

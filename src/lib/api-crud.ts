@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import type { z } from "zod";
 
 import { parseJsonBody } from "@/lib/http";
 import { logAudit } from "@/lib/store";
+import { validateBody } from "@/lib/validation";
 
 /**
  * Shared helpers for the in-memory collection API routes. They centralise the
@@ -50,10 +52,12 @@ export async function updateItem<T extends Identifiable>(
   id: string,
   req: Request,
   onUpdated?: (item: T) => void,
+  schema?: z.ZodType,
 ): Promise<NextResponse> {
   const item = collection.find((entry) => entry.id === id);
   if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  const body = await parseJsonBody<Partial<T>>(req);
+  const raw = await parseJsonBody<unknown>(req);
+  const body = schema ? validateBody(schema, raw) : (raw as Partial<T>);
   Object.assign(item, body, { id });
   onUpdated?.(item);
   return NextResponse.json(item);

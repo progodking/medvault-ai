@@ -1,13 +1,18 @@
 import { deleteItem, updateItem } from "@/lib/api-crud";
 import { withErrorHandling } from "@/lib/http";
 import { db, logAudit } from "@/lib/store";
+import { medicineUpdateSchema } from "@/lib/validation";
 
 type Params = { params: Promise<{ id: string }> };
 
 export const PUT = withErrorHandling(async (req: Request, { params }: Params) => {
   const { id } = await params;
-  return updateItem(db().medicines, id, req, (medicine) =>
-    logAudit("Medicine updated", medicine.name),
+  return updateItem(
+    db().medicines,
+    id,
+    req,
+    (medicine) => logAudit("Medicine updated", medicine.name),
+    medicineUpdateSchema,
   );
 });
 

@@ -62,9 +62,9 @@ export function RecordTimeline({
                     record={r}
                     trigger={
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        className="gap-1.5 text-primary opacity-0 transition-opacity group-hover:opacity-100"
+                        className="gap-1.5 text-primary"
                       >
                         <Sparkles className="size-3.5" /> Summarise
                       </Button>

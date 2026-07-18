@@ -131,14 +131,22 @@ export default function TimelinePage() {
 
       {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row">
-        <Select value={member} onValueChange={(v) => setMember(v ?? "all")}>
+        <Select
+          value={member}
+          onValueChange={(v) => setMember(v ?? "all")}
+          items={[{ value: "all", label: "All members" }, ...(members ?? []).map((m) => ({ value: m.id, label: m.name }))]}
+        >
           <SelectTrigger className="h-9 sm:w-48"><SelectValue placeholder="Member" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All members</SelectItem>
             {(members ?? []).map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Select value={category} onValueChange={(v) => setCategory(v ?? "all")}>
+        <Select
+          value={category}
+          onValueChange={(v) => setCategory(v ?? "all")}
+          items={[{ value: "all", label: "All categories" }, ...["Report", "Prescription", "Bill", "Scan", "Visit", "Vaccination"].map((c) => ({ value: c, label: c }))]}
+        >
           <SelectTrigger className="h-9 sm:w-44"><SelectValue placeholder="Category" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All categories</SelectItem>

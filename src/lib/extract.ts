@@ -49,23 +49,68 @@ function detectCategory(text: string): RecordCategory {
   return "Report";
 }
 
+const DOSE = /(\d+(?:\.\d+)?\s?(?:mg|mcg|ml|g|iu|units?))/i;
+
+function cleanMedName(raw: string): string {
+  return raw
+    .replace(/^(?:tab\.?|cap\.?|tablet|capsule|syrup|syp\.?|inj\.?|injection|susp\.?)\s+/i, "")
+    .replace(/[^A-Za-z0-9 +/-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+const NON_NAME_WORDS = /\b(Diagnosis|Date|Patient|Medicines?|Hospital|Age|Sex|Gender|Address|Phone|Mobile|Rx|Prescription|Report|Impression|Findings?)\b/i;
+
+function normalizeDoctor(name?: string): string | undefined {
+  if (!name) return undefined;
+  // Drop any trailing field-label word the greedy match may have grabbed.
+  const trimmed = name.replace(NON_NAME_WORDS, "").replace(/\s+/g, " ").trim();
+  if (!trimmed) return undefined;
+  return trimmed.startsWith("Dr") ? trimmed : `Dr. ${trimmed}`;
+}
+
 function extractMedicines(text: string): string[] {
   const meds = new Set<string>();
-  const lines = text.split(/\n|;/);
-  for (const line of lines) {
-    const m = line.match(/\b(?:tab\.?|cap\.?|tablet|syrup|inj\.?)\s+([A-Z][A-Za-z]+)\b.*?(\d+\s?mg|\d+\s?mcg)?/i);
-    if (m?.[1]) meds.add(`${m[1]}${m[2] ? " " + m[2].replace(/\s/g, "") : ""}`.trim());
+  const lines = text.split(/\n|;|,/);
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) continue;
+
+    // Prefixed forms: "Tab. Metformin 500mg", "Cap Amoxicillin 250mg", "Inj ..."
+    const prefixed = line.match(
+      /\b(?:tab\.?|cap\.?|tablet|capsule|syrup|syp\.?|inj\.?|injection|susp\.?)\s+([A-Z][A-Za-z]+)/i,
+    );
+    if (prefixed?.[1]) {
+      const dose = line.match(DOSE);
+      meds.add(`${cleanMedName(prefixed[1])}${dose ? " " + dose[1].replace(/\s/g, "") : ""}`.trim());
+      continue;
+    }
+
+    // Plain forms with a dosage on the line: "Metformin 500mg", "Atorvastatin 10 mg"
+    const plain = line.match(/^([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)?)\s+\d+(?:\.\d+)?\s?(?:mg|mcg|ml|g|iu|units?)\b/i);
+    if (plain?.[1]) {
+      const name = cleanMedName(plain[1]);
+      // Skip common non-medicine leaders that can precede a number.
+      if (!/^(age|weight|height|bp|patient|date|dose|qty|tablet|capsule)$/i.test(name)) {
+        const dose = line.match(DOSE);
+        meds.add(`${name}${dose ? " " + dose[1].replace(/\s/g, "") : ""}`.trim());
+      }
+    }
   }
-  return Array.from(meds).slice(0, 6);
+
+  return Array.from(meds).slice(0, 8);
 }
 
 /** Heuristic extraction of structured fields from raw OCR text. */
 export function extractFields(text: string): ExtractedFields {
   return {
-    doctorName: firstMatch(text, [
-      /Dr\.?\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})/,
-      /Doctor[:\s]+([A-Za-z .]+)/i,
-    ]),
+    doctorName: normalizeDoctor(
+      firstMatch(text, [
+        /Dr\.?[ \t]+([A-Z][a-z]+(?:[ \t]+[A-Z][a-z]+){0,2})/,
+        /Doctor[ \t]*[:\-][ \t]*(?:Dr\.?[ \t]+)?([A-Z][a-z]+(?:[ \t]+[A-Z][a-z]+){0,2})/i,
+      ]),
+    ),
     hospital: firstMatch(text, [
       /([A-Z][A-Za-z&' ]+(?:Hospital|Clinic|Healthcare|Medical Center|Diagnostics|Labs?))/,
       /Hospital[:\s]+([A-Za-z .]+)/i,

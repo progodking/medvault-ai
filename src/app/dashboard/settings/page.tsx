@@ -132,7 +132,11 @@ export default function SettingsPage() {
           </Section>
 
           <Section icon={Languages} title="Language" description="Select your preferred language.">
-            <Select value={language} onValueChange={(v) => setLanguage(v ?? "en")}>
+            <Select
+              value={language}
+              onValueChange={(v) => setLanguage(v ?? "en")}
+              items={[{ value: "en", label: "English" }, { value: "hi", label: "हिन्दी (Hindi)" }]}
+            >
               <SelectTrigger className="h-9 w-full">
                 <span className="flex items-center gap-2">
                   <Globe className="size-4" /> <SelectValue />

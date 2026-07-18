@@ -61,6 +61,11 @@ function cleanMedName(raw: string): string {
 
 const NON_NAME_WORDS = /\b(Diagnosis|Date|Patient|Medicines?|Hospital|Age|Sex|Gender|Address|Phone|Mobile|Rx|Prescription|Report|Impression|Findings?)\b/i;
 
+// Leaders that can precede a dose-like number but are not medicines, including
+// common lab analytes that appear as "<name> <value> mg/dL" on lab reports.
+const NON_MEDICINE =
+  /^(age|weight|height|bp|patient|date|dose|qty|tablet|capsule|serum|blood|cholesterol|hdl|ldl|vldl|triglycerides?|creatinine|urea|glucose|sugar|h[ae]moglobin|hba1c|bilirubin|albumin|protein|calcium|sodium|potassium|chloride|phosphorus|uric|sgpt|sgot|alt|ast|tsh|t3|t4|platelets?|wbc|rbc)(\s|$)/i;
+
 function normalizeDoctor(name?: string): string | undefined {
   if (!name) return undefined;
   // Drop any trailing field-label word the greedy match may have grabbed.
@@ -87,12 +92,13 @@ function extractMedicines(text: string): string[] {
       continue;
     }
 
-    // Plain forms with a dosage on the line: "Metformin 500mg", "Atorvastatin 10 mg"
-    const plain = line.match(/^([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)?)\s+\d+(?:\.\d+)?\s?(?:mg|mcg|ml|g|iu|units?)\b/i);
+    // Plain forms with a dosage on the line: "Metformin 500mg", "Atorvastatin 10 mg".
+    // The negative lookahead rejects lab-report concentrations like "1.2 mg/dL".
+    const plain = line.match(/^([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)?)\s+\d+(?:\.\d+)?\s?(?:mg|mcg|ml|g|iu|units?)\b(?!\s*\/)/i);
     if (plain?.[1]) {
       const name = cleanMedName(plain[1]);
-      // Skip common non-medicine leaders that can precede a number.
-      if (!/^(age|weight|height|bp|patient|date|dose|qty|tablet|capsule)$/i.test(name)) {
+      // Skip non-medicine leaders and common lab analytes that can precede a dose-like number.
+      if (!NON_MEDICINE.test(name)) {
         const dose = line.match(DOSE);
         meds.add(`${name}${dose ? " " + dose[1].replace(/\s/g, "") : ""}`.trim());
       }
@@ -107,8 +113,11 @@ export function extractFields(text: string): ExtractedFields {
   return {
     doctorName: normalizeDoctor(
       firstMatch(text, [
-        /Dr\.?[ \t]+([A-Z][a-z]+(?:[ \t]+[A-Z][a-z]+){0,2})/,
-        /Doctor[ \t]*[:\-][ \t]*(?:Dr\.?[ \t]+)?([A-Z][a-z]+(?:[ \t]+[A-Z][a-z]+){0,2})/i,
+        // Name tokens allow UPPERCASE (OCR often yields all-caps) and single-letter
+        // initials; [ \t] keeps the match on one line, and normalizeDoctor strips
+        // any trailing field label the run may have grabbed.
+        /\b[Dd][Rr]\.?[ \t]+([A-Z][A-Za-z]*\.?(?:[ \t]+[A-Z][A-Za-z]*\.?){0,2})/,
+        /Doctor[ \t]*[:\-][ \t]*(?:Dr\.?[ \t]+)?([A-Z][A-Za-z]*\.?(?:[ \t]+[A-Z][A-Za-z]*\.?){0,2})/i,
       ]),
     ),
     hospital: firstMatch(text, [

@@ -73,6 +73,29 @@ describe("extractFields — doctor name", () => {
     );
   });
 
+  it("extracts uppercase OCR names", () => {
+    expect(extractFields("Dr. MEHTA\nDiagnosis: Fever").doctorName).toBe(
+      "Dr. MEHTA",
+    );
+    expect(extractFields("DR. PRIYA SINGH").doctorName).toBe("Dr. PRIYA SINGH");
+  });
+
+  it("extracts single-letter initials", () => {
+    expect(extractFields("Dr. R K Sharma").doctorName).toBe("Dr. R K Sharma");
+  });
+
+  it("strips a trailing field label grabbed by the run", () => {
+    expect(extractFields("Dr. Mehta Diagnosis: Viral fever").doctorName).toBe(
+      "Dr. Mehta",
+    );
+  });
+
+  it("does not match 'dr' inside another word", () => {
+    expect(
+      extractFields("Consulted Andrew earlier today").doctorName,
+    ).toBeUndefined();
+  });
+
   it("returns undefined when no doctor is present", () => {
     expect(extractFields("Lab report only").doctorName).toBeUndefined();
   });
@@ -130,6 +153,18 @@ describe("extractFields — medicines", () => {
 
   it("skips non-medicine leaders like Age/Weight", () => {
     const meds = extractFields("Age 45 years\nWeight 70 kg").medicines;
+    expect(meds).toEqual([]);
+  });
+
+  it("ignores lab-report concentrations (mg/dL)", () => {
+    const meds = extractFields(
+      "Serum Creatinine 1.2 mg/dL\nCholesterol 190 mg/dL\nHaemoglobin 13 g/dL",
+    ).medicines;
+    expect(meds).toEqual([]);
+  });
+
+  it("ignores common bare lab analytes", () => {
+    const meds = extractFields("Cholesterol 190 mg\nUrea 30 mg").medicines;
     expect(meds).toEqual([]);
   });
 

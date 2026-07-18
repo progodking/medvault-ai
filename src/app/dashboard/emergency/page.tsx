@@ -68,7 +68,11 @@ export default function EmergencyPage() {
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         <Card className="h-fit gap-0 rounded-2xl border-border/70 p-6 shadow-soft">
           <Label className="mb-1.5 block">Member</Label>
-          <Select value={memberId} onValueChange={(v) => setSelectedId(v ?? "")}>
+          <Select
+            value={memberId}
+            onValueChange={(v) => setSelectedId(v ?? "")}
+            items={(members ?? []).map((m) => ({ value: m.id, label: m.name }))}
+          >
             <SelectTrigger className="h-9 w-full"><SelectValue placeholder="Select member" /></SelectTrigger>
             <SelectContent>
               {(members ?? []).map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}

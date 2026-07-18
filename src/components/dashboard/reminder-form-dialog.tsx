@@ -73,7 +73,11 @@ export function ReminderFormDialog({ trigger }: { trigger: ReactNode }) {
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label>Member</Label>
-            <Select value={memberId} onValueChange={(v) => setMemberId(v ?? "")}>
+            <Select
+              value={memberId}
+              onValueChange={(v) => setMemberId(v ?? "")}
+              items={(members ?? []).map((m) => ({ value: m.id, label: m.name }))}
+            >
               <SelectTrigger className="h-9 w-full"><SelectValue placeholder="Select member" /></SelectTrigger>
               <SelectContent>
                 {(members ?? []).map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}

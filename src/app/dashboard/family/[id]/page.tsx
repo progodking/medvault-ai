@@ -170,14 +170,22 @@ export default function MemberProfilePage() {
               onChange={(e) => setSearch(e.target.value)}
               className="h-9 sm:max-w-xs"
             />
-            <Select value={year} onValueChange={(v) => setYear(v ?? "all")}>
+            <Select
+              value={year}
+              onValueChange={(v) => setYear(v ?? "all")}
+              items={[{ value: "all", label: "All years" }, ...years.map((y) => ({ value: y, label: y }))]}
+            >
               <SelectTrigger className="h-9 sm:w-40"><SelectValue placeholder="Year" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All years</SelectItem>
                 {years.map((y) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={hospital} onValueChange={(v) => setHospital(v ?? "all")}>
+            <Select
+              value={hospital}
+              onValueChange={(v) => setHospital(v ?? "all")}
+              items={[{ value: "all", label: "All hospitals" }, ...hospitals.map((h) => ({ value: h, label: h }))]}
+            >
               <SelectTrigger className="h-9 sm:w-48"><SelectValue placeholder="Hospital" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All hospitals</SelectItem>

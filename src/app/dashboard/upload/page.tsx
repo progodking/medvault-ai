@@ -168,7 +168,11 @@ export default function UploadPage() {
         <Card className="gap-0 rounded-2xl border-border/70 p-6 shadow-soft">
           <div className="mb-4 max-w-xs">
             <Label className="mb-1.5 block">Family member</Label>
-            <Select value={memberId} onValueChange={(v) => setMemberId(v ?? "")}>
+            <Select
+              value={memberId}
+              onValueChange={(v) => setMemberId(v ?? "")}
+              items={(members ?? []).map((m) => ({ value: m.id, label: m.name }))}
+            >
               <SelectTrigger className="h-9 w-full">
                 <SelectValue placeholder="Select member" />
               </SelectTrigger>

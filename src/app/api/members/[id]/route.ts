@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { deleteItem, updateItem } from "@/lib/api-crud";
 import { withErrorHandling } from "@/lib/http";
 import { db, logAudit } from "@/lib/store";
+import { memberUpdateSchema } from "@/lib/validation";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -15,8 +16,12 @@ export const GET = withErrorHandling(async (_req: Request, { params }: Params) =
 
 export const PUT = withErrorHandling(async (req: Request, { params }: Params) => {
   const { id } = await params;
-  return updateItem(db().members, id, req, (member) =>
-    logAudit("Member updated", member.name),
+  return updateItem(
+    db().members,
+    id,
+    req,
+    (member) => logAudit("Member updated", member.name),
+    memberUpdateSchema,
   );
 });
 

@@ -108,6 +108,13 @@ export interface EmergencyCard {
   organDonor?: boolean;
 }
 
+export interface ShareLink {
+  token: string;
+  memberId: string;
+  expiresAt: string; // ISO datetime
+  createdAt: string;
+}
+
 export interface AuditLogEntry {
   id: string;
   action: string;

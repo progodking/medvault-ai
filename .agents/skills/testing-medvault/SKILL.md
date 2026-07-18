@@ -33,8 +33,24 @@ Note: this is Next.js 16 (not 15) with Turbopack — see AGENTS.md; read
 4. `/dashboard/emergency` — emergency card + QR.
 5. Theme toggle (top-right) for dark mode.
 
-A ready OCR fixture lives at `/home/ubuntu/medvault-test/report.png`
+A ready OCR fixture is expected at `/home/ubuntu/medvault-test/report.png`
 (Apollo Hospital · Dr. Mehta · Type 2 Diabetes · Metformin/Glimepiride/Atorvastatin).
+**This file is NOT in the repo and may be absent** on a fresh VM — regenerate it
+if missing. OCR runs real Tesseract.js on the image, so it must be a readable PNG
+containing these lines (put "Dr. Mehta" on its own line so the doctor regex
+doesn't grab the next field label):
+
+```
+Apollo Hospital
+Dr. Mehta
+Date: 12/06/2025
+Diagnosis: Type 2 Diabetes
+Tab. Metformin 500mg
+Tab. Glimepiride 2mg
+Tab. Atorvastatin 10mg
+```
+
+Generate with e.g. ImageMagick: `convert -size 800x600 xc:white -pointsize 28 -fill black -annotate +40+60 "<the text above, newline-separated>" /home/ubuntu/medvault-test/report.png`, then confirm it parses to the expected fields before UI testing.
 
 ## Things that have broken before (check these)
 - **OCR extraction** (`src/lib/extract.ts`): medicine parsing may miss plain

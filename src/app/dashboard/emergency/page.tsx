@@ -23,15 +23,25 @@ export default function EmergencyPage() {
   const [selectedId, setSelectedId] = useState("");
   const memberId = selectedId || members?.[0]?.id || "";
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["emergency", memberId],
-    queryFn: () => api.get<EmergencyData>(`/api/emergency/${memberId}`),
+  const { data: link } = useQuery({
+    queryKey: ["share-link", memberId],
+    queryFn: () =>
+      api.post<{ token: string; expiresAt: string }>("/api/share-links", {
+        memberId,
+      }),
     enabled: !!memberId,
+  });
+  const token = link?.token;
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["emergency", token],
+    queryFn: () => api.get<EmergencyData>(`/api/emergency/${token}`),
+    enabled: !!token,
   });
 
   const shareUrl =
-    typeof window !== "undefined" && memberId
-      ? `${window.location.origin}/emergency/${memberId}`
+    typeof window !== "undefined" && token
+      ? `${window.location.origin}/emergency/${token}`
       : "";
 
   const share = async () => {
@@ -51,7 +61,7 @@ export default function EmergencyPage() {
     try {
       await navigator.clipboard.writeText(shareUrl);
       toast.success("Secure link copied", {
-        description: "Single-use link expires in 24 hours.",
+        description: "This secure link expires in 24 hours.",
       });
     } catch {
       toast.error("Couldn't share the link", {
@@ -86,7 +96,7 @@ export default function EmergencyPage() {
           </div>
 
           <p className="mt-4 text-xs text-muted-foreground">
-            Secure share links are single-use and expire after 24 hours.
+            Secure share links use an unguessable token and expire after 24 hours.
           </p>
         </Card>
 

@@ -1,6 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { db, logAudit, uid } from "./store";
+import {
+  createShareLink,
+  db,
+  logAudit,
+  resolveShareLink,
+  uid,
+} from "./store";
 
 const g = globalThis as unknown as { __medvaultDb?: unknown };
 
@@ -47,6 +53,48 @@ describe("db", () => {
     db().members.length = 0;
     delete g.__medvaultDb;
     expect(db().members.length).toBeGreaterThan(0);
+  });
+});
+
+describe("share links", () => {
+  beforeEach(() => {
+    delete g.__medvaultDb;
+  });
+
+  afterEach(() => {
+    delete g.__medvaultDb;
+  });
+
+  it("mints an unguessable token for a member", () => {
+    const memberId = db().members[0].id;
+    const link = createShareLink(memberId);
+    expect(link.memberId).toBe(memberId);
+    expect(link.token).toMatch(/^[a-f0-9]{48}$/);
+    expect(new Date(link.expiresAt).getTime()).toBeGreaterThan(Date.now());
+  });
+
+  it("reuses a still-valid token for the same member", () => {
+    const memberId = db().members[0].id;
+    expect(createShareLink(memberId).token).toBe(
+      createShareLink(memberId).token,
+    );
+  });
+
+  it("resolves a valid token back to its link", () => {
+    const memberId = db().members[0].id;
+    const { token } = createShareLink(memberId);
+    expect(resolveShareLink(token)?.memberId).toBe(memberId);
+  });
+
+  it("returns null for unknown tokens", () => {
+    expect(resolveShareLink("does-not-exist")).toBeNull();
+  });
+
+  it("returns null for expired tokens", () => {
+    const memberId = db().members[0].id;
+    const link = createShareLink(memberId);
+    link.expiresAt = new Date(Date.now() - 1000).toISOString();
+    expect(resolveShareLink(link.token)).toBeNull();
   });
 });
 

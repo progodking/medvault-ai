@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { MedicineExplainDialog } from "@/components/dashboard/medicine-explain-dialog";
 import { MedicineFormDialog } from "@/components/dashboard/medicine-form-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import {
   useUpdateMedicine,
 } from "@/hooks/use-medicines";
 import { useMembers } from "@/hooks/use-members";
+import { errorMessage } from "@/lib/errors";
 import { formatDate, isExpired } from "@/lib/format";
 import type { Frequency, Medicine } from "@/lib/types";
 
@@ -80,7 +82,15 @@ function MedicineCard({ med, memberName }: { med: Medicine; memberName: string }
           <Switch
             checked={med.reminderEnabled}
             onCheckedChange={(v) =>
-              update.mutate({ id: med.id, data: { reminderEnabled: v } })
+              update.mutate(
+                { id: med.id, data: { reminderEnabled: v } },
+                {
+                  onError: (err) =>
+                    toast.error("Couldn't update reminder", {
+                      description: errorMessage(err, "Please try again."),
+                    }),
+                },
+              )
             }
           />
           <span className="text-xs text-muted-foreground">Reminder</span>
@@ -95,7 +105,13 @@ function MedicineCard({ med, memberName }: { med: Medicine; memberName: string }
             size="icon-sm"
             aria-label="Delete"
             onClick={() =>
-              del.mutate(med.id, { onSuccess: () => toast.success("Medicine deleted") })
+              del.mutate(med.id, {
+                onSuccess: () => toast.success("Medicine deleted"),
+                onError: (err) =>
+                  toast.error("Couldn't delete medicine", {
+                    description: errorMessage(err, "Please try again."),
+                  }),
+              })
             }
           >
             <Trash2 className="size-4 text-destructive" />
@@ -107,7 +123,7 @@ function MedicineCard({ med, memberName }: { med: Medicine; memberName: string }
 }
 
 export default function MedicinesPage() {
-  const { data: medicines, isLoading } = useMedicines();
+  const { data: medicines, isLoading, isError, error, refetch } = useMedicines();
   const { data: members } = useMembers();
   const memberName = (id: string) => members?.find((m) => m.id === id)?.name ?? "Unknown";
 
@@ -145,6 +161,12 @@ export default function MedicinesPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-56 rounded-2xl" />)}
         </div>
+      ) : isError ? (
+        <ErrorState
+          title="Couldn't load medicines"
+          error={error}
+          onRetry={() => refetch()}
+        />
       ) : (
         <Tabs defaultValue="active">
           <TabsList>

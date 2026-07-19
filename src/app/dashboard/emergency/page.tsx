@@ -9,6 +9,7 @@ import {
   EmergencyCardView,
   type EmergencyData,
 } from "@/components/emergency/emergency-card-view";
+import { ErrorState } from "@/components/shared/error-state";
 import { MemberSelect } from "@/components/shared/member-select";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ export default function EmergencyPage() {
   const [selectedId, setSelectedId] = useState("");
   const memberId = selectedId || members?.[0]?.id || "";
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["emergency", memberId],
     queryFn: () => api.get<EmergencyData>(`/api/emergency/${memberId}`),
     enabled: !!memberId,
@@ -91,7 +92,13 @@ export default function EmergencyPage() {
         </Card>
 
         <div>
-          {isLoading || !data ? (
+          {isError ? (
+            <ErrorState
+              title="Couldn't load the emergency card"
+              error={error}
+              onRetry={() => refetch()}
+            />
+          ) : isLoading || !data ? (
             <Skeleton className="mx-auto h-[520px] w-full max-w-md rounded-3xl" />
           ) : (
             <EmergencyCardView data={data} qrValue={shareUrl} />

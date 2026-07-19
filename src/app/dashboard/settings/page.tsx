@@ -80,7 +80,11 @@ export default function SettingsPage() {
   const [name, setName] = useState<string>(DEMO_USER.name);
   const [emailAddr, setEmailAddr] = useState<string>(DEMO_USER.email);
 
-  const { data: audit } = useQuery({
+  const {
+    data: audit,
+    isError: auditError,
+    refetch: refetchAudit,
+  } = useQuery({
     queryKey: ["audit"],
     queryFn: () => api.get<AuditLogEntry[]>("/api/audit"),
   });
@@ -194,8 +198,17 @@ export default function SettingsPage() {
               <span className="text-xs text-muted-foreground">{formatDateTime(a.timestamp)}</span>
             </div>
           ))}
-          {(audit ?? []).length === 0 && (
-            <p className="text-sm text-muted-foreground">No activity yet.</p>
+          {auditError ? (
+            <div className="flex items-center justify-between rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm">
+              <span className="text-muted-foreground">Couldn&apos;t load the audit log.</span>
+              <Button variant="outline" size="sm" onClick={() => refetchAudit()}>
+                Try again
+              </Button>
+            </div>
+          ) : (
+            (audit ?? []).length === 0 && (
+              <p className="text-sm text-muted-foreground">No activity yet.</p>
+            )
           )}
         </div>
       </Section>

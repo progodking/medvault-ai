@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { RecordTimeline } from "@/components/dashboard/record-timeline";
+import { ErrorState } from "@/components/shared/error-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { api } from "@/lib/api-client";
+import { errorMessage } from "@/lib/errors";
 import { useMembers } from "@/hooks/use-members";
 import { useRecords } from "@/hooks/use-records";
 import type { MedicalRecord } from "@/lib/types";
@@ -31,7 +33,12 @@ const EXAMPLES = [
 
 export default function TimelinePage() {
   const { data: members } = useMembers();
-  const { data: records } = useRecords();
+  const {
+    data: records,
+    isError: recordsError,
+    error: recordsErrorObj,
+    refetch: refetchRecords,
+  } = useRecords();
 
   const [member, setMember] = useState("all");
   const [category, setCategory] = useState("all");
@@ -66,7 +73,7 @@ export default function TimelinePage() {
       setInterpreted(res.interpreted);
     } catch (err) {
       toast.error("Search failed", {
-        description: err instanceof Error ? err.message : "Please try again.",
+        description: errorMessage(err, "Please try again."),
       });
     } finally {
       setSearching(false);
@@ -165,7 +172,15 @@ export default function TimelinePage() {
         </Badge>
       </div>
 
-      <RecordTimeline records={base} showMember memberName={memberName} />
+      {recordsError && !aiResults ? (
+        <ErrorState
+          title="Couldn't load your timeline"
+          error={recordsErrorObj}
+          onRetry={() => refetchRecords()}
+        />
+      ) : (
+        <RecordTimeline records={base} showMember memberName={memberName} />
+      )}
     </div>
   );
 }

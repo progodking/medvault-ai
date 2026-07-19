@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { ReminderFormDialog } from "@/components/dashboard/reminder-form-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import {
   useReminders,
   useUpdateReminder,
 } from "@/hooks/use-reminders";
+import { errorMessage } from "@/lib/errors";
 import { formatDateTime, relativeTime } from "@/lib/format";
 import type { Reminder } from "@/lib/types";
 import { REMINDER_ICON } from "@/lib/ui-maps";
@@ -52,7 +54,13 @@ function ReminderRow({ r, memberName }: { r: Reminder; memberName: string }) {
             onClick={() =>
               update.mutate(
                 { id: r.id, data: { completed: true } },
-                { onSuccess: () => toast.success("Marked as done") },
+                {
+                  onSuccess: () => toast.success("Marked as done"),
+                  onError: (err) =>
+                    toast.error("Couldn't update reminder", {
+                      description: errorMessage(err, "Please try again."),
+                    }),
+                },
               )
             }
           >
@@ -63,7 +71,15 @@ function ReminderRow({ r, memberName }: { r: Reminder; memberName: string }) {
           variant="ghost"
           size="icon-sm"
           aria-label="Delete"
-          onClick={() => del.mutate(r.id, { onSuccess: () => toast.success("Reminder deleted") })}
+          onClick={() =>
+            del.mutate(r.id, {
+              onSuccess: () => toast.success("Reminder deleted"),
+              onError: (err) =>
+                toast.error("Couldn't delete reminder", {
+                  description: errorMessage(err, "Please try again."),
+                }),
+            })
+          }
         >
           <Trash2 className="size-4 text-destructive" />
         </Button>
@@ -73,7 +89,7 @@ function ReminderRow({ r, memberName }: { r: Reminder; memberName: string }) {
 }
 
 export default function RemindersPage() {
-  const { data: reminders, isLoading } = useReminders();
+  const { data: reminders, isLoading, isError, error, refetch } = useReminders();
   const { data: members } = useMembers();
   const memberName = (id: string) => members?.find((m) => m.id === id)?.name ?? "Unknown";
 
@@ -112,6 +128,12 @@ export default function RemindersPage() {
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-2xl" />)}
         </div>
+      ) : isError ? (
+        <ErrorState
+          title="Couldn't load reminders"
+          error={error}
+          onRetry={() => refetch()}
+        />
       ) : (
         <Tabs defaultValue="upcoming">
           <TabsList>

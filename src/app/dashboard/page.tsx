@@ -15,6 +15,7 @@ import { useState } from "react";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { HealthSummaryChart } from "@/components/dashboard/health-summary-chart";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,7 +30,13 @@ import { DEMO_USER } from "@/lib/demo-user";
 import { formatDate, initials, relativeTime } from "@/lib/format";
 
 export default function DashboardPage() {
-  const { data: stats, isLoading: statsLoading } = useStats();
+  const {
+    data: stats,
+    isLoading: statsLoading,
+    isError: statsError,
+    error: statsErrorObj,
+    refetch: refetchStats,
+  } = useStats();
   const { data: members } = useMembers();
   const { data: records } = useRecords();
   const { data: reminders } = useReminders();
@@ -66,6 +73,14 @@ export default function DashboardPage() {
       </Card>
 
       {/* Stats */}
+      {statsError ? (
+        <ErrorState
+          title="Couldn't load your stats"
+          error={statsErrorObj}
+          onRetry={() => refetchStats()}
+          className="py-10"
+        />
+      ) : (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statsLoading || !stats ? (
           Array.from({ length: 4 }).map((_, i) => (
@@ -80,6 +95,7 @@ export default function DashboardPage() {
           </>
         )}
       </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Health summary chart */}

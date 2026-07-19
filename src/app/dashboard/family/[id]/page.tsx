@@ -15,6 +15,7 @@ import { useMemo, useState } from "react";
 
 import { RecordTimeline } from "@/components/dashboard/record-timeline";
 import { MemberReportsChart } from "@/components/dashboard/member-reports-chart";
+import { ErrorState } from "@/components/shared/error-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,7 +37,13 @@ import { calcAge, initials, isExpired } from "@/lib/format";
 
 export default function MemberProfilePage() {
   const { id } = useParams<{ id: string }>();
-  const { data: member, isLoading } = useMember(id);
+  const {
+    data: member,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useMember(id);
   const { data: records } = useRecords(id);
   const { data: medicines } = useMedicines(id);
 
@@ -67,6 +74,19 @@ export default function MemberProfilePage() {
       return true;
     });
   }, [records, year, hospital, search]);
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <Button variant="ghost" size="sm" className="gap-2" render={<Link href="/dashboard/family"><ArrowLeft className="size-4" /> Family</Link>} />
+        <ErrorState
+          title="Couldn't load this member"
+          error={error}
+          onRetry={() => refetch()}
+        />
+      </div>
+    );
+  }
 
   if (isLoading || !member) {
     return (

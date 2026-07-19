@@ -92,6 +92,7 @@ describe("updateItem", () => {
       collection,
       "1",
       req("http://x", { method: "PUT", body: JSON.stringify({ id: "hacked", name: "new" }) }),
+      (d) => d as Partial<Row>,
     );
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ id: "1", memberId: "m1", name: "new" });
@@ -105,6 +106,7 @@ describe("updateItem", () => {
       collection,
       "1",
       req("http://x", { method: "PUT", body: JSON.stringify({ name: "x" }) }),
+      (d) => d as Partial<Row>,
       (item) => {
         seen = item;
       },
@@ -117,6 +119,7 @@ describe("updateItem", () => {
       [],
       "missing",
       req("http://x", { method: "PUT", body: JSON.stringify({ name: "x" }) }),
+      (d) => d as Partial<Row>,
     );
     expect(res.status).toBe(404);
     expect(await res.json()).toEqual({ error: "Not found" });

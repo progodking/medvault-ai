@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectField } from "@/components/shared/select-field";
 import type { FamilyMember } from "@/lib/types";
 
 /**
@@ -26,23 +20,13 @@ export function MemberSelect({
   placeholder?: string;
   className?: string;
 }) {
-  const list = members ?? [];
   return (
-    <Select
+    <SelectField
       value={value}
-      onValueChange={(v) => onValueChange(v ?? "")}
-      items={list.map((m) => ({ value: m.id, label: m.name }))}
-    >
-      <SelectTrigger className={className}>
-        <SelectValue placeholder={placeholder} />
-      </SelectTrigger>
-      <SelectContent>
-        {list.map((m) => (
-          <SelectItem key={m.id} value={m.id}>
-            {m.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+      onValueChange={onValueChange}
+      options={(members ?? []).map((m) => ({ value: m.id, label: m.name }))}
+      placeholder={placeholder}
+      triggerClassName={className}
+    />
   );
 }

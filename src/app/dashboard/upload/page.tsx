@@ -15,25 +15,19 @@ import { toast } from "sonner";
 
 import { MemberSelect } from "@/components/shared/member-select";
 import { PageHeader } from "@/components/shared/page-header";
+import { SelectField } from "@/components/shared/select-field";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useMembers } from "@/hooks/use-members";
 import { useCreateRecord } from "@/hooks/use-records";
 import { RECORD_CATEGORIES } from "@/lib/constants";
 import { extractFields } from "@/lib/extract";
 import type { RecordCategory } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, getErrorMessage } from "@/lib/utils";
 
 type Stage = "idle" | "scanning" | "review";
 
@@ -158,7 +152,7 @@ export default function UploadPage() {
       router.push("/dashboard/timeline");
     } catch (err) {
       toast.error("Couldn't save report", {
-        description: err instanceof Error ? err.message : "Please try again.",
+        description: getErrorMessage(err),
       });
     }
   };
@@ -294,12 +288,11 @@ export default function UploadPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>Category</Label>
-                <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v as RecordCategory })}>
-                  <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {RECORD_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <SelectField
+                  value={form.category}
+                  onValueChange={(v) => setForm({ ...form, category: v as RecordCategory })}
+                  options={RECORD_CATEGORIES}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="date">Date</Label>

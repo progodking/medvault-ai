@@ -15,19 +15,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { MemberSelect } from "@/components/shared/member-select";
+import { SelectField } from "@/components/shared/select-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useCreateReminder } from "@/hooks/use-reminders";
 import { useMembers } from "@/hooks/use-members";
 import { REMINDER_TYPES } from "@/lib/constants";
 import type { ReminderType } from "@/lib/types";
+import { getErrorMessage } from "@/lib/utils";
 
 export function ReminderFormDialog({ trigger }: { trigger: ReactNode }) {
   const { data: members } = useMembers();
@@ -61,7 +56,7 @@ export function ReminderFormDialog({ trigger }: { trigger: ReactNode }) {
       setNotes("");
     } catch (err) {
       toast.error("Couldn't create reminder", {
-        description: err instanceof Error ? err.message : "Please try again.",
+        description: getErrorMessage(err),
       });
     }
   };
@@ -93,12 +88,11 @@ export function ReminderFormDialog({ trigger }: { trigger: ReactNode }) {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Type</Label>
-              <Select value={type} onValueChange={(v) => setType(v as ReminderType)}>
-                <SelectTrigger className="h-9 w-full"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {REMINDER_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <SelectField
+                value={type}
+                onValueChange={(v) => setType(v as ReminderType)}
+                options={REMINDER_TYPES}
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="rdt">Date &amp; time</Label>

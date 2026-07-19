@@ -19,14 +19,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { SelectField } from "@/components/shared/select-field";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMember } from "@/hooks/use-members";
@@ -170,28 +164,22 @@ export default function MemberProfilePage() {
               onChange={(e) => setSearch(e.target.value)}
               className="h-9 sm:max-w-xs"
             />
-            <Select
+            <SelectField
               value={year}
-              onValueChange={(v) => setYear(v ?? "all")}
-              items={[{ value: "all", label: "All years" }, ...years.map((y) => ({ value: y, label: y }))]}
-            >
-              <SelectTrigger className="h-9 sm:w-40"><SelectValue placeholder="Year" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All years</SelectItem>
-                {years.map((y) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select
+              onValueChange={(v) => setYear(v || "all")}
+              options={years}
+              allOption={{ value: "all", label: "All years" }}
+              placeholder="Year"
+              triggerClassName="h-9 sm:w-40"
+            />
+            <SelectField
               value={hospital}
-              onValueChange={(v) => setHospital(v ?? "all")}
-              items={[{ value: "all", label: "All hospitals" }, ...hospitals.map((h) => ({ value: h, label: h }))]}
-            >
-              <SelectTrigger className="h-9 sm:w-48"><SelectValue placeholder="Hospital" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All hospitals</SelectItem>
-                {hospitals.map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}
-              </SelectContent>
-            </Select>
+              onValueChange={(v) => setHospital(v || "all")}
+              options={hospitals}
+              allOption={{ value: "all", label: "All hospitals" }}
+              placeholder="Hospital"
+              triggerClassName="h-9 sm:w-48"
+            />
           </div>
           <RecordTimeline records={filtered} />
         </TabsContent>

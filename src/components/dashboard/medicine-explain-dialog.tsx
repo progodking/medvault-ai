@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { api } from "@/lib/api-client";
 import { AI_DISCLAIMER } from "@/lib/constants";
+import { getErrorMessage } from "@/lib/utils";
 
 interface Props {
   medicine: string;
@@ -41,8 +42,7 @@ export function MedicineExplainDialog({ medicine, trigger }: Props) {
       setExplanation(res.explanation);
       setSource(res.source);
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Couldn't load the explanation.";
+      const message = getErrorMessage(err, "Couldn't load the explanation.");
       setError(message);
       toast.error("Explanation failed", { description: message });
     } finally {

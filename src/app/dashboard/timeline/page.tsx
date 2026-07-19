@@ -6,21 +6,17 @@ import { toast } from "sonner";
 
 import { RecordTimeline } from "@/components/dashboard/record-timeline";
 import { PageHeader } from "@/components/shared/page-header";
+import { SelectField } from "@/components/shared/select-field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { api } from "@/lib/api-client";
 import { useMembers } from "@/hooks/use-members";
 import { useRecords } from "@/hooks/use-records";
+import { RECORD_CATEGORIES } from "@/lib/constants";
 import type { MedicalRecord } from "@/lib/types";
+import { getErrorMessage } from "@/lib/utils";
 
 const EXAMPLES = [
   "Show all diabetes reports",
@@ -66,7 +62,7 @@ export default function TimelinePage() {
       setInterpreted(res.interpreted);
     } catch (err) {
       toast.error("Search failed", {
-        description: err instanceof Error ? err.message : "Please try again.",
+        description: getErrorMessage(err),
       });
     } finally {
       setSearching(false);
@@ -136,30 +132,22 @@ export default function TimelinePage() {
 
       {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row">
-        <Select
+        <SelectField
           value={member}
-          onValueChange={(v) => setMember(v ?? "all")}
-          items={[{ value: "all", label: "All members" }, ...(members ?? []).map((m) => ({ value: m.id, label: m.name }))]}
-        >
-          <SelectTrigger className="h-9 sm:w-48"><SelectValue placeholder="Member" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All members</SelectItem>
-            {(members ?? []).map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select
+          onValueChange={(v) => setMember(v || "all")}
+          options={(members ?? []).map((m) => ({ value: m.id, label: m.name }))}
+          allOption={{ value: "all", label: "All members" }}
+          placeholder="Member"
+          triggerClassName="h-9 sm:w-48"
+        />
+        <SelectField
           value={category}
-          onValueChange={(v) => setCategory(v ?? "all")}
-          items={[{ value: "all", label: "All categories" }, ...["Report", "Prescription", "Bill", "Scan", "Visit", "Vaccination"].map((c) => ({ value: c, label: c }))]}
-        >
-          <SelectTrigger className="h-9 sm:w-44"><SelectValue placeholder="Category" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All categories</SelectItem>
-            {["Report", "Prescription", "Bill", "Scan", "Visit", "Vaccination"].map((c) => (
-              <SelectItem key={c} value={c}>{c}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onValueChange={(v) => setCategory(v || "all")}
+          options={RECORD_CATEGORIES}
+          allOption={{ value: "all", label: "All categories" }}
+          placeholder="Category"
+          triggerClassName="h-9 sm:w-44"
+        />
         <Badge variant="secondary" className="h-9 self-start px-3 sm:self-auto">
           {base.length} records
         </Badge>

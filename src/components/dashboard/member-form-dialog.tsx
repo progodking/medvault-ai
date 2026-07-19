@@ -17,18 +17,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { SelectField } from "@/components/shared/select-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useCreateMember, useUpdateMember } from "@/hooks/use-members";
 import { BLOOD_GROUPS, RELATIONSHIPS } from "@/lib/constants";
 import type { FamilyMember } from "@/lib/types";
+import { getErrorMessage } from "@/lib/utils";
 
 const schema = z.object({
   name: z.string().min(2, "Enter a name"),
@@ -130,7 +125,7 @@ export function MemberFormDialog({
       onOpenChange?.(false);
     } catch (err) {
       toast.error(isEdit ? "Couldn't update member" : "Couldn't add member", {
-        description: err instanceof Error ? err.message : "Please try again.",
+        description: getErrorMessage(err),
       });
     }
   };
@@ -166,14 +161,11 @@ export function MemberFormDialog({
                 control={control}
                 name="relationship"
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {RELATIONSHIPS.map((r) => (
-                        <SelectItem key={r} value={r}>{r}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SelectField
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    options={RELATIONSHIPS}
+                  />
                 )}
               />
             </div>
@@ -193,14 +185,11 @@ export function MemberFormDialog({
                 control={control}
                 name="gender"
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {["Male", "Female", "Other"].map((g) => (
-                        <SelectItem key={g} value={g}>{g}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SelectField
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    options={["Male", "Female", "Other"]}
+                  />
                 )}
               />
             </div>
@@ -210,14 +199,11 @@ export function MemberFormDialog({
                 control={control}
                 name="bloodGroup"
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {BLOOD_GROUPS.map((b) => (
-                        <SelectItem key={b} value={b}>{b}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SelectField
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    options={BLOOD_GROUPS}
+                  />
                 )}
               />
             </div>

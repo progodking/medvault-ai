@@ -24,6 +24,14 @@ Verify gates before UI testing: `npm run typecheck`, `npx eslint .`, `npm run bu
 Note: this is Next.js 16 (not 15) with Turbopack — see AGENTS.md; read
 `node_modules/next/dist/docs/` before changing framework conventions.
 
+## Unit tests / coverage
+- `npm test` (vitest) and `npm run test:coverage`. Coverage is scoped to
+  `src/lib/**` in `vitest.config.ts` (mock-data + types excluded).
+- `src/lib/fonts.ts` cannot be unit-tested under the vitest `node` env — it imports
+  `next/font/google`, which needs the Next build runtime. Expect it to stay at 0%.
+- `NextResponse` from `next/server` works fine in the vitest node env, so route
+  helpers (`http.ts`, `api-crud.ts`) can be tested directly.
+
 ## Golden path to demo
 1. `/dashboard/upload` — pick a family member, **Browse files**, upload a
    prescription image. Wait for "Scan complete". Confirm the OCR-extracted
@@ -68,6 +76,9 @@ The page renders at ~1600×1069 CSS px but the screen tool uses 1024×768. Scale
 via the browser console to locate an element, then convert to click coordinates.
 
 ## Tips
+- When navigating via the Chrome address bar, include the scheme:
+  `http://localhost:3000/...`. Typing `localhost:3000/...` may be treated as a
+  Google search (and can hit a reCAPTCHA) instead of navigating.
 - The Next.js dev indicator (bottom-left "N" circle) shows a red count + an
   "Issues" menu entry when there are runtime warnings; absence = clean.
 - Base UI Select keeps the real value in a hidden `<input>` while the trigger

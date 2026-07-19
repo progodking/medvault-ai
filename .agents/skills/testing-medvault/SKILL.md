@@ -69,6 +69,31 @@ A ready OCR fixture lives at `/home/ubuntu/medvault-test/report.png`
   interaction (e.g. Amlodipine + Simvastatin, Moderate), add both drugs fresh with
   no expiry so they're active.
 
+## Testing API validation / security (demo mode has no auth)
+In demo mode Clerk is disabled, so `middleware.ts` lets all `/api/*` through with
+no session — hitting the API directly with `curl` is the intended path (no cookies
+needed). This makes API-level checks (input validation, mass-assignment) easy to
+prove without the UI. Server-side validation lives in `src/lib/validation.ts`
+(Zod, non-strict so unknown keys are stripped) and is wired into every POST/PUT
+route + the `ai/*` routes via `validate()` and `updateItem`'s validator arg.
+Useful adversarial curls (server on :3000):
+```
+curl -s -X POST :3000/api/members -d '{"name":"X","bloodGroup":"Z+"}'          # -> 400
+curl -s -X POST :3000/api/members -d '{"name":"X","bloodGroup":"A+","id":"a","isAdmin":true}' # 201, id/isAdmin stripped
+curl -s -X PUT  :3000/api/members/m1 -d '{"id":"HACKED","evil":"x"}'           # id stays m1, evil stripped
+curl -s -X POST :3000/api/medicines  -d '{"name":"X","schedule":["noon"]}'     # -> 400 (bad enum)
+```
+Note demo data is in-memory and resets on server restart — restart before a clean
+UI recording so prior curl-created rows (e.g. a stray "Riya") don't appear.
+
+## Gotcha: native `<input type="date">` is hard to automate
+The member form DOB is a native date input with **required** client validation
+(`dateOfBirth: z.string().min(1)`), so you must set a valid date or submit fails.
+Typing `1998-05-20` (with hyphens) or pasting corrupts the year segment (seen:
+`80520`, `275760`). Reliable approach: click the **month** segment, then `type "05"`
+(auto-advances) → `type "20"` → `type "1998"`. Verify with a `zoom` on the field
+before submitting.
+
 ## Coordinate mapping for computer-use
 The page renders at ~1600×1069 CSS px but the screen tool uses 1024×768. Scale is
 ~0.64 uniform with a ~+56px vertical offset for browser chrome:

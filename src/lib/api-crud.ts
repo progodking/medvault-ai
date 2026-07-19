@@ -42,18 +42,21 @@ export function addItem<T extends Identifiable>(
 }
 
 /**
- * Merges the JSON request body into the item with the given id (keeping the id
- * stable) and returns it, or a 404 response when it does not exist.
+ * Merges the validated JSON request body into the item with the given id
+ * (keeping the id stable) and returns it, or a 404 response when it does not
+ * exist. The body is run through `validate` first, which strips unknown keys and
+ * range-checks values, so clients cannot mass-assign arbitrary fields.
  */
 export async function updateItem<T extends Identifiable>(
   collection: T[],
   id: string,
   req: Request,
+  validateBody: (data: unknown) => Partial<T>,
   onUpdated?: (item: T) => void,
 ): Promise<NextResponse> {
   const item = collection.find((entry) => entry.id === id);
   if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  const body = await parseJsonBody<Partial<T>>(req);
+  const body = validateBody(await parseJsonBody<unknown>(req));
   Object.assign(item, body, { id });
   onUpdated?.(item);
   return NextResponse.json(item);

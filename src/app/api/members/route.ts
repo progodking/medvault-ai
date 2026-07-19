@@ -4,13 +4,14 @@ import { addItem } from "@/lib/api-crud";
 import { parseJsonBody, withErrorHandling } from "@/lib/http";
 import { db, uid } from "@/lib/store";
 import type { FamilyMember } from "@/lib/types";
+import { memberInputSchema, validate } from "@/lib/validation";
 
 export const GET = withErrorHandling(async () => {
   return NextResponse.json(db().members);
 });
 
 export const POST = withErrorHandling(async (req: Request) => {
-  const body = await parseJsonBody<Partial<FamilyMember>>(req);
+  const body = validate(memberInputSchema, await parseJsonBody<unknown>(req));
   const member: FamilyMember = {
     id: uid("m"),
     name: body.name ?? "Unnamed",

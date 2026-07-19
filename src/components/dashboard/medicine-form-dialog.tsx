@@ -21,7 +21,8 @@ import { Switch } from "@/components/ui/switch";
 import { useCreateMedicine } from "@/hooks/use-medicines";
 import { useMembers } from "@/hooks/use-members";
 import type { Frequency } from "@/lib/types";
-import { cn, getErrorMessage } from "@/lib/utils";
+import { errorMessage } from "@/lib/errors";
+import { cn } from "@/lib/utils";
 
 const FREQS: { key: Frequency; label: string }[] = [
   { key: "morning", label: "Morning" },
@@ -70,7 +71,7 @@ export function MedicineFormDialog({ trigger }: { trigger: ReactNode }) {
       setNotes("");
     } catch (err) {
       toast.error("Couldn't add medicine", {
-        description: getErrorMessage(err),
+        description: errorMessage(err, "Please try again."),
       });
     }
   };

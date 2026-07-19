@@ -4,6 +4,7 @@ import { parseJsonBody, withErrorHandling } from "@/lib/http";
 import { db } from "@/lib/store";
 import type { MedicalRecord, RecordCategory } from "@/lib/types";
 import { RECORD_CATEGORIES } from "@/lib/constants";
+import { aiSearchSchema, validate } from "@/lib/validation";
 
 const SCAN_KEYWORDS: Record<string, string[]> = {
   mri: ["mri"],
@@ -17,10 +18,10 @@ const SCAN_KEYWORDS: Record<string, string[]> = {
  * Examples: "Show all diabetes reports", "Show reports from 2024", "Show MRI".
  */
 export const POST = withErrorHandling(async (req: Request) => {
-  const { query, memberId } = await parseJsonBody<{
-    query?: string;
-    memberId?: string;
-  }>(req);
+  const { query, memberId } = validate(
+    aiSearchSchema,
+    await parseJsonBody<unknown>(req),
+  );
   if (!query)
     return NextResponse.json({ error: "Query required" }, { status: 400 });
 

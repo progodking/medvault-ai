@@ -22,7 +22,7 @@ import { useCreateReminder } from "@/hooks/use-reminders";
 import { useMembers } from "@/hooks/use-members";
 import { REMINDER_TYPES } from "@/lib/constants";
 import type { ReminderType } from "@/lib/types";
-import { getErrorMessage } from "@/lib/utils";
+import { errorMessage } from "@/lib/errors";
 
 export function ReminderFormDialog({ trigger }: { trigger: ReactNode }) {
   const { data: members } = useMembers();
@@ -56,7 +56,7 @@ export function ReminderFormDialog({ trigger }: { trigger: ReactNode }) {
       setNotes("");
     } catch (err) {
       toast.error("Couldn't create reminder", {
-        description: getErrorMessage(err),
+        description: errorMessage(err, "Please try again."),
       });
     }
   };

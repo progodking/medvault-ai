@@ -27,7 +27,8 @@ import { useCreateRecord } from "@/hooks/use-records";
 import { RECORD_CATEGORIES } from "@/lib/constants";
 import { extractFields } from "@/lib/extract";
 import type { RecordCategory } from "@/lib/types";
-import { cn, getErrorMessage } from "@/lib/utils";
+import { errorMessage } from "@/lib/errors";
+import { cn } from "@/lib/utils";
 
 type Stage = "idle" | "scanning" | "review";
 
@@ -152,7 +153,7 @@ export default function UploadPage() {
       router.push("/dashboard/timeline");
     } catch (err) {
       toast.error("Couldn't save report", {
-        description: getErrorMessage(err),
+        description: errorMessage(err, "Please try again."),
       });
     }
   };

@@ -23,7 +23,7 @@ import { Label } from "@/components/ui/label";
 import { useCreateMember, useUpdateMember } from "@/hooks/use-members";
 import { BLOOD_GROUPS, RELATIONSHIPS } from "@/lib/constants";
 import type { FamilyMember } from "@/lib/types";
-import { getErrorMessage } from "@/lib/utils";
+import { errorMessage } from "@/lib/errors";
 
 const schema = z.object({
   name: z.string().min(2, "Enter a name"),
@@ -125,7 +125,7 @@ export function MemberFormDialog({
       onOpenChange?.(false);
     } catch (err) {
       toast.error(isEdit ? "Couldn't update member" : "Couldn't add member", {
-        description: getErrorMessage(err),
+        description: errorMessage(err, "Please try again."),
       });
     }
   };

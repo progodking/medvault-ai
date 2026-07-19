@@ -1,18 +1,30 @@
 import { describe, expect, it } from "vitest";
 
-import { getErrorMessage } from "./utils";
+import { cn } from "./utils";
 
-describe("getErrorMessage", () => {
-  it("returns the message of an Error instance", () => {
-    expect(getErrorMessage(new Error("boom"))).toBe("boom");
+describe("cn", () => {
+  it("joins truthy class names", () => {
+    expect(cn("a", "b")).toBe("a b");
   });
 
-  it("returns the default fallback for non-Error values", () => {
-    expect(getErrorMessage("nope")).toBe("Please try again.");
-    expect(getErrorMessage(undefined)).toBe("Please try again.");
+  it("ignores falsy values", () => {
+    expect(cn("a", false, null, undefined, "", "b")).toBe("a b");
   });
 
-  it("returns a custom fallback when provided", () => {
-    expect(getErrorMessage(42, "Custom fallback")).toBe("Custom fallback");
+  it("supports conditional object syntax", () => {
+    expect(cn("base", { active: true, hidden: false })).toBe("base active");
+  });
+
+  it("merges conflicting tailwind classes, keeping the last", () => {
+    expect(cn("px-2", "px-4")).toBe("px-4");
+    expect(cn("text-sm", "text-lg")).toBe("text-lg");
+  });
+
+  it("flattens array inputs", () => {
+    expect(cn(["a", "b"], "c")).toBe("a b c");
+  });
+
+  it("returns an empty string with no arguments", () => {
+    expect(cn()).toBe("");
   });
 });

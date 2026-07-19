@@ -3,12 +3,13 @@ import { NextResponse } from "next/server";
 import { AI_DISCLAIMER } from "@/lib/constants";
 import { generateWithGemini } from "@/lib/gemini";
 import { parseJsonBody, withErrorHandling } from "@/lib/http";
+import { summarizeSchema, validate } from "@/lib/validation";
 
 export const POST = withErrorHandling(async (req: Request) => {
-  const { text, title } = await parseJsonBody<{
-    text?: string;
-    title?: string;
-  }>(req);
+  const { text, title } = validate(
+    summarizeSchema,
+    await parseJsonBody<unknown>(req),
+  );
   if (!text)
     return NextResponse.json({ error: "Text required" }, { status: 400 });
 

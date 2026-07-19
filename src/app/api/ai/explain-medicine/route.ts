@@ -3,9 +3,13 @@ import { NextResponse } from "next/server";
 import { AI_DISCLAIMER } from "@/lib/constants";
 import { generateWithGemini } from "@/lib/gemini";
 import { parseJsonBody, withErrorHandling } from "@/lib/http";
+import { explainMedicineSchema, validate } from "@/lib/validation";
 
 export const POST = withErrorHandling(async (req: Request) => {
-  const { name } = await parseJsonBody<{ name?: string }>(req);
+  const { name } = validate(
+    explainMedicineSchema,
+    await parseJsonBody<unknown>(req),
+  );
   if (!name)
     return NextResponse.json(
       { error: "Medicine name required" },
